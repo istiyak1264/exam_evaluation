@@ -484,6 +484,14 @@ tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
 }
 
 /* Two fields side by side, aligned to the same baseline grid */
+.row-fields { display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; align-items: start; }
+.row-fields .field { max-width: none; margin-bottom: 0; }
+.row-fields .field select { width: 100%; height: 44px; }
+
+@media (max-width: 620px) {
+  .row-fields { grid-template-columns: 1fr; }
+}
+
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; align-items: start; margin-bottom: .4rem; }
 .field-row .field { max-width: none; margin-bottom: .9rem; }
 .field-row .field input,

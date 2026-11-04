@@ -87,14 +87,14 @@ export default function RegisterScript() {
       {error && <Note kind="danger">{error}</Note>}
 
       <form className="card stack" onSubmit={submit}>
-        <div className="row">
-          <div className="field" style={{ flex: 1 }}>
+        <div className="row-fields">
+          <div className="field">
             <label>Academic session</label>
             <select value={sessionId} onChange={(e) => { setSessionId(e.target.value); setCourseId(''); setStudentId('') }}>
               {sessions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div className="field" style={{ flex: 2 }}>
+          <div className="field">
             <label>Course</label>
             <select value={courseId} onChange={(e) => setCourseId(e.target.value)}>
               <option value="">Select a course…</option>
