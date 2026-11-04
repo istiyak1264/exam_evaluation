@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
 import { SkipLink } from './components/gov'
@@ -45,30 +44,54 @@ const links = [
   { to: '/admin/audit', label: 'Audit trail', roles: ['ADMIN'] },
 ]
 
+function Crest() {
+  return (
+    <svg className="crest" viewBox="0 0 64 74" role="img" aria-label="Institutional crest">
+      <path d="M32 2 60 10v31c0 16-12 27-28 31C16 68 4 57 4 41V10L32 2Z" fill="#0b3d2e" stroke="#f42a41" strokeWidth="2.5" />
+      <path d="M32 9 53 15v26c0 12-9 21-21 25C20 62 11 53 11 41V15L32 9Z" fill="#12664a" />
+      <path d="M20 27h24v3H20zM20 34h24v3H20zM20 41h24v3H20z" fill="#f2f6f3" opacity=".9" />
+      <path d="M28 21h8v4h-8z" fill="#f42a41" />
+    </svg>
+  )
+}
+
 function Layout({ children }) {
   const { user, signOut } = useAuth()
-  const [menu, setMenu] = useState(false)
-  const loc = useLocation()
-
-  useEffect(() => { setMenu(false) }, [loc.pathname])
 
   return (
     <div className="shell">
       <SkipLink />
-      <header className="topbar">
-        <div className="brand">
-          Script Eval
-          <small>Examination office</small>
+
+      <div className="utility">
+        <div className="wrap">
+          <span className="gov">গণপ্রজাতন্ত্রী বাংলাদেশ · People&apos;s Republic of Bangladesh</span>
+          <span className="util-right">
+            <span>Examination Control Room</span>
+            <span className="mono">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            <span><strong>বাংলা</strong>&nbsp;|&nbsp;English</span>
+          </span>
         </div>
-        <button
-          className="nav-toggle"
-          aria-label="Toggle navigation"
-          aria-expanded={menu}
-          onClick={() => setMenu((m) => !m)}
-        >
-          <span /><span /><span />
-        </button>
-        <nav className={menu ? 'open' : ''}>
+      </div>
+
+      <header className="masthead">
+        <div className="wrap">
+          <Crest />
+          <div className="identity">
+            <div className="org">University Examination Board</div>
+            <div className="org-sub">Office of the Controller of Examinations · পরীক্ষা নিয়ন্ত্রণ বিভাগ</div>
+            <div className="org-sys">Script Evaluation System — anonymised double-blind marking</div>
+          </div>
+          <div className="who">
+            <span className="who-name">{user?.full_name}</span>
+            <span className="who-role">{user?.role.replace('_', ' ')}</span>
+            <NavLink to="/account" className="btn sm secondary">Account</NavLink>
+            <button className="btn sm secondary" onClick={() => void signOut()}>Sign out</button>
+          </div>
+        </div>
+      </header>
+
+      <nav className="navbar" aria-label="Main navigation">
+        <div className="wrap">
           {links.filter((l) => user && l.roles.includes(user.role)).map((l) => (
             <NavLink
               key={l.to}
@@ -79,23 +102,36 @@ function Layout({ children }) {
               {l.label}
             </NavLink>
           ))}
-        </nav>
-        <div className="who">
-          <span className="who-name">{user?.full_name}</span>
-          <span className="mono who-role">{user?.role.replace('_', ' ').toLowerCase()}</span>
-          <NavLink to="/account" className="btn sm who-btn">Account</NavLink>
-          <button className="btn sm who-btn" onClick={() => void signOut()}>Sign out</button>
         </div>
-      </header>
-      <div className="phase">
-        <span className="tag">Private beta</span>
-        Examination office use only — scripts are anonymised before marking.
-      </div>
+      </nav>
+
       <main className="main" id="main" tabIndex={-1}>
-        <div className="main-inner">{children}</div>
+        <div className="wrap">{children}</div>
       </main>
+
       <footer className="footer">
-        Script Evaluation System · anonymised double-blind marking · third examination at a 13-mark gap
+        <div className="wrap footer-grid">
+          <div>
+            <h2>Examination Board</h2>
+            <p>Administered under the ordinance for anonymised double-blind marking. A third examination is mandatory wherever the first two marks differ by 13 or more.</p>
+          </div>
+          <div>
+            <h2>Contact</h2>
+            <p>
+              Room 204, Administrative Building<br />
+              examination@university.ac.bd<br />
+              +880 2 000 0000
+            </p>
+          </div>
+          <div>
+            <h2>Office hours</h2>
+            <p>Sunday–Thursday, 09:00–17:00<br />Scripts are received at the hall desk only.</p>
+          </div>
+        </div>
+        <div className="wrap copyright">
+          <span>© {new Date().getFullYear()} University Examination Board. All rights reserved.</span>
+          <span>Version 1.0 · Examination records are retained for five years</span>
+        </div>
       </footer>
     </div>
   )
