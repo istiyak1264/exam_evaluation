@@ -114,15 +114,16 @@ export default function RegisterScript() {
           {student && <span className="hint">Selected: {student.full_name} · {student.student_no}</span>}
         </div>
 
-        <div className="row">
-          <div className="field" style={{ flex: 1 }}>
-            <label>PDF scan</label>
-            <input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <div className="field-row">
+          <div className="field">
+            <label htmlFor="pdf">PDF scan</label>
+            <input id="pdf" type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             <span className="hint">Max 25 MB. Header is validated as %PDF-.</span>
           </div>
-          <div className="field" style={{ flex: 1 }}>
-            <label>Cover-sheet code (optional)</label>
-            <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="auto-generated if left blank" />
+          <div className="field">
+            <label htmlFor="code">Cover-sheet code (optional)</label>
+            <input id="code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="auto-generated if left blank" />
+            <span className="hint">Printed on the cover sheet; leave blank to auto-generate.</span>
           </div>
         </div>
 

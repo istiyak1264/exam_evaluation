@@ -389,3 +389,20 @@ tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
   tbody tr:nth-child(4) { animation-delay: .06s; }
   tbody tr:nth-child(n+5) { animation-delay: .08s; }
 }
+
+/* Two fields side by side, aligned to the same baseline grid */
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; align-items: start; margin-bottom: .4rem; }
+.field-row .field { max-width: none; margin-bottom: .9rem; }
+.field-row .field input,
+.field-row .field select { max-width: none; width: 100%; height: 44px; }
+.field-row .field input[type="file"] { padding: 6px 8px; line-height: 1.2; }
+.field-row .field input[type="file"]::file-selector-button {
+  font: inherit; font-size: .84rem; font-weight: 600; color: var(--green-dark);
+  background: var(--green-soft); border: 1px solid var(--line); border-right: 0;
+  padding: .28rem .6rem; margin-right: .6rem; cursor: pointer;
+}
+.field-row .field input[type="file"]::file-selector-button:hover { background: #e1eee7; }
+
+@media (max-width: 720px) {
+  .field-row { grid-template-columns: 1fr; gap: 0; }
+}
