@@ -2,7 +2,6 @@ import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
 import { SkipLink } from './components/gov'
 import Login from './pages/Login'
-import Signup from './pages/Signup'
 import Dashboard from './pages/Dashboard'
 import Scripts from './pages/Scripts'
 import RegisterScript from './pages/RegisterScript'
@@ -119,7 +118,6 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={user && !loading ? <Navigate to={home[user.role]} replace /> : <Login />} />
-      <Route path="/signup" element={user && !loading ? <Navigate to={home[user.role]} replace /> : <Signup />} />
       <Route
         path="*"
         element={

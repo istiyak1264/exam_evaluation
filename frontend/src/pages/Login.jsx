@@ -29,10 +29,7 @@ export default function Login() {
   }
 
   return (
-    <AuthShell
-      title="Sign in"
-      footer={<>No account yet? <a href="/signup">Create one</a></>}
-    >
+    <AuthShell title="Sign in">
       <form onSubmit={submit}>
         <ErrorSummary errors={error ? [error] : []} />
         <div className="field">

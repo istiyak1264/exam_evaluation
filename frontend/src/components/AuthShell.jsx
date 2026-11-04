@@ -4,7 +4,7 @@ import { SkipLink } from './gov'
 // Official-document composition: the crest and board identity head a ruled
 // sheet, the form sits on paper with a double hairline border, and the crest
 // shows through as a watermark. One centred column at every width.
-export function AuthShell({ title, children, footer }) {
+export function AuthShell({ title, children }) {
   return (
     <div className="auth-page">
       <SkipLink />
@@ -26,7 +26,6 @@ export function AuthShell({ title, children, footer }) {
             <h1 className="auth-title">{title}</h1>
             {children}
           </div>
-          {footer && <div className="auth-foot">{footer}</div>}
         </main>
       </div>
     </div>

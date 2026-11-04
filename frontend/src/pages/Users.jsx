@@ -7,7 +7,7 @@ const ROLES = ['ADMIN', 'EVALUATOR', 'STUDENT']
 export default function Users() {
   const [role, setRole] = useState('')
   const { data, error, loading, reload } = useFetch(() => api.users(role), [role])
-  const [form, setForm] = useState({ email: '', full_name: '', role: 'EVALUATOR', password: '' })
+  const [form, setForm] = useState({ email: '', full_name: '', role: 'EVALUATOR', password: '', student_no: '', registration_no: '' })
   const [msg, setMsg] = useState(null)
 
   async function create(e) {
@@ -16,11 +16,16 @@ export default function Users() {
     try {
       await api.createUser(form)
       setMsg(`${form.full_name} created.`)
-      setForm({ email: '', full_name: '', role: 'EVALUATOR', password: '' })
+      setForm({ email: '', full_name: '', role: 'EVALUATOR', password: '', student_no: '', registration_no: '' })
       reload()
     } catch (err) {
       setMsg((err).message)
     }
+  }
+
+  async function changeRole(id, role) {
+    setMsg(null)
+    try { await api.patchUser(id, { role }); reload() } catch (e) { setMsg((e).message) }
   }
 
   async function toggle(id, active) {
@@ -53,6 +58,12 @@ export default function Users() {
           </select>
         </div>
         <div className="field"><label>Temporary password</label><input type="text" minLength={10} required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></div>
+        {form.role === 'STUDENT' && (
+          <>
+            <div className="field"><label>Student ID</label><input value={form.student_no} onChange={(e) => setForm({ ...form, student_no: e.target.value })} placeholder="e.g. 0401" /></div>
+            <div className="field"><label>Registration number</label><input value={form.registration_no} onChange={(e) => setForm({ ...form, registration_no: e.target.value })} placeholder="e.g. 0401" /></div>
+          </>
+        )}
         <div className="field" style={{ justifyContent: 'end' }}><button className="btn primary">Create account</button></div>
       </form>
 
@@ -67,7 +78,11 @@ export default function Users() {
                 <tr key={u.id}>
                   <td>{u.full_name}</td>
                   <td className="mono">{u.email}</td>
-                  <td><span className="badge info">{u.role.replace('_', ' ').toLowerCase()}</span></td>
+                  <td>
+                    <select value={u.role} onChange={(e) => void changeRole(u.id, e.target.value)} style={{ padding: '.35rem', borderRadius: 8, border: '1px solid var(--line)' }}>
+                      {ROLES.map((r) => <option key={r} value={r}>{r.toLowerCase()}</option>)}
+                    </select>
+                  </td>
                   <td><span className={`badge ${u.is_active ? 'ok' : 'danger'}`}>{u.is_active ? 'active' : 'disabled'}</span></td>
                   <td className="hint">{when(u.created_at)}</td>
                   <td><button className="btn sm" onClick={() => void toggle(u.id, !u.is_active)}>{u.is_active ? 'Disable' : 'Enable'}</button></td>

@@ -1,11 +1,14 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/istiyak/secure-exam-eval/internal/auth"
+	"github.com/istiyak/secure-exam-eval/internal/models"
+	"github.com/istiyak/secure-exam-eval/internal/store"
 )
 
 // ---------- sessions ----------
@@ -188,10 +191,12 @@ func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 type createUserReq struct {
-	Email    string `json:"email"`
-	FullName string `json:"full_name"`
-	Role     string `json:"role"`
-	Password string `json:"password"`
+	Email     string `json:"email"`
+	FullName  string `json:"full_name"`
+	Role      string `json:"role"`
+	Password  string `json:"password"`
+	StudentNo string `json:"student_no"`
+	RegNo     string `json:"registration_no"`
 }
 
 func validRole(r string) bool {
@@ -221,18 +226,43 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
+	// A student account is created against a candidate record; the office
+	// supplies the identifiers it issued.
+	var candidate *models.Student
+	if req.Role == string(auth.RoleStudent) && (req.StudentNo != "" || req.RegNo != "") {
+		st, lerr := s.DB.UnclaimedStudent(r.Context(), req.StudentNo, req.RegNo)
+		if lerr != nil {
+			if errors.Is(lerr, store.ErrConflict) {
+				writeErr(w, http.StatusConflict, "that student record already has an account")
+				return
+			}
+			writeErr(w, http.StatusUnprocessableEntity,
+				"no student record matches that student ID and registration number")
+			return
+		}
+		candidate = st
+	}
+
 	u, err := s.DB.CreateUser(r.Context(), req.Email, hash, req.FullName, req.Role)
 	if err != nil {
 		mapStoreErr(w, err)
 		return
 	}
-	s.audit(r, "USER_CREATED", "user", u.ID, map[string]any{"role": u.Role})
+	if candidate != nil {
+		if ok, cerr := s.DB.ClaimStudent(r.Context(), candidate.ID, u.ID); cerr == nil && !ok {
+			_ = s.DB.SetUserActive(r.Context(), u.ID, false)
+			writeErr(w, http.StatusConflict, "that student record was claimed in the meantime")
+			return
+		}
+	}
+	s.audit(r, "USER_CREATED", "user", u.ID, map[string]any{"role": u.Role, "linked": candidate != nil})
 	writeJSON(w, http.StatusCreated, u)
 }
 
 type patchUserReq struct {
 	IsActive *bool   `json:"is_active"`
 	Password *string `json:"password"`
+	Role     *string `json:"role"`
 }
 
 func (s *Server) handlePatchUser(w http.ResponseWriter, r *http.Request) {
@@ -247,6 +277,42 @@ func (s *Server) handlePatchUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		s.audit(r, "USER_ACTIVE_SET", "user", id, map[string]any{"active": *req.IsActive})
+	}
+	if req.Role != nil {
+		role := strings.ToUpper(strings.TrimSpace(*req.Role))
+		if !validRole(role) {
+			writeErr(w, http.StatusUnprocessableEntity, "role must be ADMIN, EVALUATOR or STUDENT")
+			return
+		}
+		cur, err := s.DB.UserByID(r.Context(), id)
+		if err != nil {
+			mapStoreErr(w, err)
+			return
+		}
+		if cur.Role == role {
+			// no-op
+		} else if cur.Role == string(auth.RoleAdmin) {
+			n, err := s.DB.CountActiveAdmins(r.Context(), id)
+			if err != nil {
+				mapStoreErr(w, err)
+				return
+			}
+			if n == 0 {
+				writeErr(w, http.StatusUnprocessableEntity, "this is the last administrator — promote another first")
+				return
+			}
+			if err := s.DB.SetUserRole(r.Context(), id, role); err != nil {
+				mapStoreErr(w, err)
+				return
+			}
+			s.audit(r, "USER_ROLE_SET", "user", id, map[string]any{"role": role})
+		} else {
+			if err := s.DB.SetUserRole(r.Context(), id, role); err != nil {
+				mapStoreErr(w, err)
+				return
+			}
+			s.audit(r, "USER_ROLE_SET", "user", id, map[string]any{"role": role})
+		}
 	}
 	if req.Password != nil {
 		hash, err := auth.HashPassword(*req.Password)

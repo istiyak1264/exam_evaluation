@@ -450,6 +450,73 @@ func TestUploadValidation(t *testing.T) {
 	}
 }
 
+func TestAdminCreatesAccountsAndRoles(t *testing.T) {
+	h := newHarness(t)
+	_, adminTok := h.user(auth.RoleAdmin)
+	h.fixtures(adminTok)
+	ses := bodySessionID(t, h, adminTok)
+
+	// A student account is created against an existing candidate record.
+	_, stBody := h.do("POST", "/api/students", adminTok, map[string]any{
+		"student_no": "MATS" + h.sfx, "registration_no": "REGS" + h.sfx,
+		"full_name": "Link Me " + h.sfx, "session_id": ses})
+	studentID := stBody["id"].(string)
+
+	// Unknown identifiers are refused.
+	if st, _ := h.do("POST", "/api/users", adminTok, map[string]any{
+		"email": "s" + h.sfx + "@uni.test", "full_name": "Ghost", "role": "STUDENT",
+		"password": "longpassword1", "student_no": "MATS" + h.sfx, "registration_no": "NOPE"}); st != 422 {
+		t.Fatalf("wrong registration on create: %d", st)
+	}
+
+	st, body := h.do("POST", "/api/users", adminTok, map[string]any{
+		"email": "s" + h.sfx + "@uni.test", "full_name": "Real Student", "role": "STUDENT",
+		"password": "longpassword1", "student_no": "MATS" + h.sfx, "registration_no": "REGS" + h.sfx})
+	if st != 201 {
+		t.Fatalf("create student account: %d %v", st, body)
+	}
+	uid := body["id"].(string)
+
+	// The new account can sign in and is linked to the candidate record.
+	lst, lbody := h.login("s"+h.sfx+"@uni.test", "longpassword1")
+	if lst != 200 {
+		t.Fatalf("new account cannot sign in: %d", lst)
+	}
+	stuTok := lbody["access_token"].(string)
+	if st, _ := h.do("GET", "/api/results/mine", stuTok, nil); st != 200 {
+		t.Fatalf("student cannot read own results: %d", st)
+	}
+	if st, _ := h.do("GET", "/api/users", stuTok, nil); st != 403 {
+		t.Fatalf("student reached admin list: %d", st)
+	}
+	var linked *string
+	if err := h.db.QueryRowContext(context.Background(), `SELECT user_id FROM students WHERE id = ?`, studentID).Scan(&linked); err != nil {
+		t.Fatal(err)
+	}
+	if linked == nil || *linked != uid {
+		t.Fatalf("candidate not linked: %v", linked)
+	}
+
+	// Roles can be changed; the last administrator cannot be demoted.
+	if st, _ := h.do("PATCH", "/api/users/"+uid, adminTok, map[string]any{"role": "EVALUATOR"}); st != 200 {
+		t.Fatalf("role change: %d", st)
+	}
+	var n int
+	if err := h.db.QueryRowContext(context.Background(),
+		`SELECT COUNT(*) FROM users WHERE role = 'ADMIN' AND is_active = 1`).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	var selfID string
+	if err := h.db.QueryRowContext(context.Background(), `SELECT id FROM users WHERE role = 'ADMIN' LIMIT 1`).Scan(&selfID); err != nil {
+		t.Fatal(err)
+	}
+	if n == 1 {
+		if st, _ := h.do("PATCH", "/api/users/"+selfID, adminTok, map[string]any{"role": "EVALUATOR"}); st != 422 {
+			t.Fatalf("last admin demoted: %d", st)
+		}
+	}
+}
+
 func TestSelfSignUp(t *testing.T) {
 	h := newHarness(t)
 

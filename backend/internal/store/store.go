@@ -117,6 +117,20 @@ func (s *Store) ListUsers(ctx context.Context, role, q string) ([]models.User, e
 	return out, rows.Err()
 }
 
+func (s *Store) SetUserRole(ctx context.Context, id, role string) error {
+	_, err := s.DB.ExecContext(ctx, `UPDATE users SET role = ? WHERE id = ?`, role, id)
+	return mapErr(err)
+}
+
+// CountActiveAdmins counts administrators, used to stop the last one being
+// demoted.
+func (s *Store) CountActiveAdmins(ctx context.Context, excludeID string) (int, error) {
+	var n int
+	err := s.DB.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM users WHERE role = 'ADMIN' AND is_active = 1 AND id <> ?`, excludeID).Scan(&n)
+	return n, err
+}
+
 func (s *Store) SetUserActive(ctx context.Context, id string, active bool) error {
 	if _, err := s.DB.ExecContext(ctx, `UPDATE users SET is_active = ? WHERE id = ?`, active, id); err != nil {
 		return mapErr(err)
