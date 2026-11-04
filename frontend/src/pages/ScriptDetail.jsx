@@ -4,6 +4,7 @@ import { api, money, when } from '../api'
 import { useAuth } from '../auth'
 import { PdfPanel } from '../components/PdfPanel'
 import { Badge, Grade, Loading, Note } from '../components/ui'
+import { Breadcrumbs, Caption, SummaryList, TaskList } from '../components/gov'
 
 export default function ScriptDetail() {
   const { id = '' } = useParams()
@@ -67,17 +68,21 @@ export default function ScriptDetail() {
 
   return (
     <div className="stack">
+      <Breadcrumbs items={[
+        { label: isEvaluator ? 'My marking' : 'Scripts', href: isEvaluator ? '/queue' : '/scripts' },
+        { label: blind?.script_code ?? script?.script_code ?? id },
+      ]} />
+
       <div className="page-head">
-        <div>
-          <h1 className="mono">{blind?.script_code ?? script?.script_code}</h1>
-          <p>
-            {blind?.course_code ?? script?.course_code} · {blind?.course_title ?? script?.course_title} · paper out of {maxMarks}
-            {!isEvaluator && script && <> · {script.page_count ?? '?'} page(s)</>}
-          </p>
-        </div>
-        <div className="row">
+        <Caption>
+          {blind?.course_code ?? script?.course_code} · {blind?.course_title ?? script?.course_title} · paper out of {maxMarks}
+          {!isEvaluator && script ? ` · ${script.page_count ?? '?'} page(s)` : ''}
+        </Caption>
+        <h1 className="mono">{blind?.script_code ?? script?.script_code}</h1>
+        <div className="row" style={{ marginTop: '.6rem' }}>
           <Badge status={status} />
-          <Link className="btn sm" to={isEvaluator ? '/queue' : '/scripts'}>Back</Link>
+          {final !== null && <strong className="mono">Final {money(final)}</strong>}
+          {final !== null && <Grade grade={final >= 70 ? 'A' : final >= 60 ? 'B' : final >= 50 ? 'C' : final >= 45 ? 'D' : final >= 40 ? 'E' : 'F'} />}
         </div>
       </div>
 
@@ -89,6 +94,19 @@ export default function ScriptDetail() {
         </Note>
       )}
 
+      <section className="card">
+        <h2>Marking progress</h2>
+        <TaskList
+          items={[
+            { label: 'Script registered and anonymised', status: 'done', meta: 'Completed' },
+            { label: 'Two examiners appointed', status: status === 'REGISTERED' ? 'todo' : 'done', meta: status === 'REGISTERED' ? 'Not started' : 'Completed' },
+            { label: 'First and second marks submitted', status: marks.length >= 2 ? 'done' : status === 'EVAL_PENDING' ? 'current' : 'todo' },
+            { label: 'Third examination (gap of 13 or more)', hint: status === 'THIRD_REVIEW' ? 'A third examiner is required before this script can be resolved' : 'Only needed when the first two marks differ by 13 or more', status: status === 'THIRD_REVIEW' ? 'current' : final !== null ? 'done' : 'todo', meta: status === 'THIRD_REVIEW' ? 'Required' : final !== null && script?.method === 'MEDIAN_OF_THREE' ? 'Completed' : 'Not needed' },
+            { label: 'Result resolved', status: final !== null ? 'done' : 'todo', meta: final !== null ? 'Completed' : 'Not started' },
+          ]}
+        />
+      </section>
+
       <div className="detail-grid">
         <div className="card">
           <h2>Script pages</h2>
@@ -96,32 +114,42 @@ export default function ScriptDetail() {
         </div>
 
         <div className="stack">
-          <div className="card stack">
+          <div className="card">
             <h2>Marks</h2>
-            {marks.length === 0 && <p className="hint">Nothing submitted yet.</p>}
-            {marks.map((m) => (
-              <div key={m.slot} className="row spread">
-                <div>
-                  <div className="hint">{m.slot.toLowerCase()} examiner{!isEvaluator && m.evaluator_name ? ` · ${m.evaluator_name}` : ''}</div>
-                  {m.comment && <div style={{ fontSize: '.85rem' }}>{m.comment}</div>}
-                  <div className="hint">{when(m.submitted_at)}</div>
-                </div>
-                <strong className="mono">{money(m.score)}</strong>
-              </div>
-            ))}
+            {marks.length === 0 ? (
+              <p className="hint">Nothing submitted yet.</p>
+            ) : (
+              <SummaryList
+                rows={[
+                  ...marks.map((m) => ({
+                    key: `${m.slot.toLowerCase()} examiner${!isEvaluator && m.evaluator_name ? ` · ${m.evaluator_name}` : ''}`,
+                    value: (
+                      <>
+                        <strong className="mono">{money(m.score)}</strong>
+                        {m.comment ? <div className="hint">{m.comment}</div> : null}
+                        <div className="hint">{when(m.submitted_at)}</div>
+                      </>
+                    ),
+                  })),
+                  ...(final !== null
+                    ? [{
+                        key: 'Final marks',
+                        value: (
+                          <>
+                            <strong className="mono">{money(final)}</strong>
+                            <div className="hint">{(script?.method ?? blind?.method)?.replace(/_/g, ' ').toLowerCase() ?? 'board decision'}</div>
+                          </>
+                        ),
+                      }]
+                    : []),
+                ]}
+              />
+            )}
             {status === 'THIRD_REVIEW' && (
-              <Note>A gap of 13 or more was recorded. A third external examiner must mark this script.</Note>
-            )}
-            {final !== null && (
-              <div className="row spread" style={{ borderTop: '1px solid var(--line)', paddingTop: '.6rem' }}>
-                <div>
-                  <strong>Final marks</strong>
-                  <div className="hint">{(script?.method ?? blind?.method)?.replace(/_/g, ' ').toLowerCase() ?? 'board'}</div>
-                </div>
-                <strong className="mono" style={{ fontSize: '1.2rem' }}>{money(final)}</strong>
+              <div className="note" style={{ marginTop: '1rem' }}>
+                A gap of 13 or more was recorded. A third external examiner must mark this script.
               </div>
             )}
-            {final !== null && script && <Grade grade={final >= 70 ? 'A' : final >= 60 ? 'B' : final >= 50 ? 'C' : final >= 45 ? 'D' : final >= 40 ? 'E' : 'F'} />}
           </div>
 
           {isEvaluator && !hasMyMark && (
@@ -224,11 +252,15 @@ export default function ScriptDetail() {
           )}
 
           {!isEvaluator && script && (
-            <div className="card stack">
+            <div className="card">
               <h2>Identity</h2>
-              <div><span className="hint">Student</span><div>{script.student_name}</div></div>
-              <div><span className="hint">Matriculation</span><div className="mono">{script.student_no}</div></div>
-              <div><span className="hint">Session</span><div>{script.session}</div></div>
+              <SummaryList
+                rows={[
+                  { key: 'Student', value: script.student_name },
+                  { key: 'Matriculation', value: <span className="mono">{script.student_no}</span> },
+                  { key: 'Session', value: script.session },
+                ]}
+              />
             </div>
           )}
         </div>

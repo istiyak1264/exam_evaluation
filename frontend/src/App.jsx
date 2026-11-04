@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
+import { SkipLink } from './components/gov'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Scripts from './pages/Scripts'
@@ -53,6 +54,7 @@ function Layout({ children }) {
 
   return (
     <div className="shell">
+      <SkipLink />
       <header className="topbar">
         <div className="brand">
           Script Eval
@@ -68,7 +70,12 @@ function Layout({ children }) {
         </button>
         <nav className={menu ? 'open' : ''}>
           {links.filter((l) => user && l.roles.includes(user.role)).map((l) => (
-            <NavLink key={l.to} to={l.to} className={({ isActive }) => (isActive ? 'active' : '')} end={l.to === '/scripts'}>
+            <NavLink
+              key={l.to}
+              to={l.to}
+              className={({ isActive }) => `navlink${isActive ? ' active' : ''}`}
+              end={l.to === '/scripts'}
+            >
               {l.label}
             </NavLink>
           ))}
@@ -80,7 +87,16 @@ function Layout({ children }) {
           <button className="btn sm who-btn" onClick={() => void signOut()}>Sign out</button>
         </div>
       </header>
-      <main className="main">{children}</main>
+      <div className="phase">
+        <span className="tag">Private beta</span>
+        Examination office use only — scripts are anonymised before marking.
+      </div>
+      <main className="main" id="main" tabIndex={-1}>
+        <div className="main-inner">{children}</div>
+      </main>
+      <footer className="footer">
+        Script Evaluation System · anonymised double-blind marking · third examination at a 13-mark gap
+      </footer>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
-import { Note } from '../components/ui'
+import { ErrorSummary, SkipLink } from '../components/gov'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -28,12 +28,18 @@ export default function Login() {
 
   return (
     <div className="login-wrap">
-      <form className="login-card stack" onSubmit={submit}>
+      <SkipLink />
+      <div className="login-bar">
+        Script Evaluation System
+        <small>Examination office</small>
+      </div>
+      <div className="login-body">
+      <form className="login-card" onSubmit={submit}>
         <div className="login-brand">
-          <div className="brand-mark">Script Evaluation System</div>
+          <div className="brand-mark">Sign in</div>
           <small>Anonymised double-blind marking</small>
         </div>
-        {error && <Note kind="danger">{error}</Note>}
+        <ErrorSummary errors={error ? [error] : []} />
         <div className="field">
           <label htmlFor="email">Email</label>
           <input id="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -43,10 +49,11 @@ export default function Login() {
           <input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         <button className="btn primary" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
-        <p className="hint">
+        <p className="hint" style={{ marginTop: '1.2rem', marginBottom: 0 }}>
           Students: use the account issued by the examination office. Examiners never see names on the scripts they mark.
         </p>
       </form>
+      </div>
     </div>
   )
 }
