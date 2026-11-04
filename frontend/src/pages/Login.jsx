@@ -29,7 +29,7 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <form className="login-card stack" onSubmit={submit}>
-        <div>
+        <div className="login-brand">
           <div className="brand-mark">Script Evaluation System</div>
           <small>Anonymised double-blind marking</small>
         </div>

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
 import Login from './pages/Login'
@@ -45,6 +46,11 @@ const links = [
 
 function Layout({ children }) {
   const { user, signOut } = useAuth()
+  const [menu, setMenu] = useState(false)
+  const loc = useLocation()
+
+  useEffect(() => { setMenu(false) }, [loc.pathname])
+
   return (
     <div className="shell">
       <header className="topbar">
@@ -52,7 +58,15 @@ function Layout({ children }) {
           Script Eval
           <small>Examination office</small>
         </div>
-        <nav>
+        <button
+          className="nav-toggle"
+          aria-label="Toggle navigation"
+          aria-expanded={menu}
+          onClick={() => setMenu((m) => !m)}
+        >
+          <span /><span /><span />
+        </button>
+        <nav className={menu ? 'open' : ''}>
           {links.filter((l) => user && l.roles.includes(user.role)).map((l) => (
             <NavLink key={l.to} to={l.to} className={({ isActive }) => (isActive ? 'active' : '')} end={l.to === '/scripts'}>
               {l.label}
@@ -62,8 +76,8 @@ function Layout({ children }) {
         <div className="who">
           <span className="who-name">{user?.full_name}</span>
           <span className="mono who-role">{user?.role.replace('_', ' ').toLowerCase()}</span>
-          <NavLink to="/account" className="btn sm">Account</NavLink>
-          <button className="btn sm" onClick={() => void signOut()}>Sign out</button>
+          <NavLink to="/account" className="btn sm who-btn">Account</NavLink>
+          <button className="btn sm who-btn" onClick={() => void signOut()}>Sign out</button>
         </div>
       </header>
       <main className="main">{children}</main>

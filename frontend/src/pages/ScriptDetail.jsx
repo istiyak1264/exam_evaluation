@@ -89,7 +89,7 @@ export default function ScriptDetail() {
         </Note>
       )}
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.6fr) minmax(280px, 1fr)' }}>
+      <div className="detail-grid">
         <div className="card">
           <h2>Script pages</h2>
           <PdfPanel scriptId={id} />
