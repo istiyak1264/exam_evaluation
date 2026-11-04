@@ -22,6 +22,7 @@ var (
 	ErrForbidden = errors.New("forbidden")
 	ErrState     = errors.New("invalid state for this operation")
 	ErrInvalid   = errors.New("invalid input")
+	ErrInUse     = errors.New("still referenced by other records")
 )
 
 // Store is the persistence gateway.
@@ -115,6 +116,28 @@ func (s *Store) ListUsers(ctx context.Context, role, q string) ([]models.User, e
 		out = append(out, u)
 	}
 	return out, rows.Err()
+}
+
+// DeleteUser removes an account outright, but only when nothing else depends on
+// it: assignments, marks and similar rows keep a NOT NULL reference to the user
+// and would otherwise have to lose data.
+func (s *Store) DeleteUser(ctx context.Context, id string) error {
+	var refs int
+	if err := s.DB.QueryRowContext(ctx, `
+		SELECT (SELECT COUNT(*) FROM marks WHERE evaluator_id = ?)
+		     + (SELECT COUNT(*) FROM script_assignments WHERE evaluator_id = ?)
+		     + (SELECT COUNT(*) FROM scripts WHERE registered_by = ?)
+		     + (SELECT COUNT(*) FROM results WHERE resolved_by = ?)
+		     + (SELECT COUNT(*) FROM grade_challenges WHERE decided_by = ?)
+		     + (SELECT COUNT(*) FROM courses WHERE instructor_id = ?)`,
+		id, id, id, id, id, id).Scan(&refs); err != nil {
+		return mapErr(err)
+	}
+	if refs > 0 {
+		return ErrInUse
+	}
+	_, err := s.DB.ExecContext(ctx, `DELETE FROM users WHERE id = ?`, id)
+	return mapErr(err)
 }
 
 func (s *Store) SetUserRole(ctx context.Context, id, role string) error {

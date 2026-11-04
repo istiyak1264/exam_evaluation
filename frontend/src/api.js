@@ -113,6 +113,7 @@ export const api = {
   users: (role = '', q = '') => request('GET', `/api/users?${query({ role, q })}`),
   createUser: (user) => request('POST', '/api/users', user),
   patchUser: (id, patch) => request('PATCH', `/api/users/${id}`, patch),
+  deleteUser: (id) => request('DELETE', `/api/users/${id}`),
 
   scripts: (params = {}) => request('GET', `/api/scripts?${query(params)}`),
   script: (id) => request('GET', `/api/scripts/${id}`),

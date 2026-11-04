@@ -330,3 +330,38 @@ func (s *Server) handlePatchUser(w http.ResponseWriter, r *http.Request) {
 }
 
 var _ = strconv.Itoa
+
+func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if me := userFrom(r.Context()); me != nil && me.ID == id {
+		writeErr(w, http.StatusUnprocessableEntity, "you cannot delete the account you are signed in with")
+		return
+	}
+	u, err := s.DB.UserByID(r.Context(), id)
+	if err != nil {
+		mapStoreErr(w, err)
+		return
+	}
+	if u.Role == string(auth.RoleAdmin) {
+		n, err := s.DB.CountActiveAdmins(r.Context(), id)
+		if err != nil {
+			mapStoreErr(w, err)
+			return
+		}
+		if n == 0 {
+			writeErr(w, http.StatusUnprocessableEntity, "this is the last administrator")
+			return
+		}
+	}
+	if err := s.DB.DeleteUser(r.Context(), id); err != nil {
+		if errors.Is(err, store.ErrInUse) {
+			writeErr(w, http.StatusConflict,
+				"this account has marking history, so it can be disabled but not deleted")
+			return
+		}
+		mapStoreErr(w, err)
+		return
+	}
+	s.audit(r, "USER_DELETED", "user", id, map[string]any{"email": u.Email, "role": u.Role})
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}

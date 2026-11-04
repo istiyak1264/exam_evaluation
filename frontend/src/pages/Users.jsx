@@ -28,6 +28,12 @@ export default function Users() {
     try { await api.patchUser(id, { role }); reload() } catch (e) { setMsg((e).message) }
   }
 
+  async function remove(u) {
+    if (!window.confirm(`Delete ${u.full_name}? Accounts with marking history can only be disabled.`)) return
+    setMsg(null)
+    try { await api.deleteUser(u.id); setMsg(`${u.full_name} deleted.`); reload() } catch (e) { setMsg((e).message) }
+  }
+
   async function toggle(id, active) {
     try { await api.patchUser(id, { is_active: active }); reload() } catch (e) { setMsg((e).message) }
   }
@@ -57,7 +63,7 @@ export default function Users() {
             {ROLES.map((r) => <option key={r} value={r}>{r.replace('_', ' ').toLowerCase()}</option>)}
           </select>
         </div>
-        <div className="field"><label>Temporary password</label><input type="text" minLength={10} required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></div>
+        <div className="field"><label>Password</label><input type="text" minLength={10} required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></div>
         {form.role === 'STUDENT' && (
           <>
             <div className="field"><label>Student ID</label><input value={form.student_no} onChange={(e) => setForm({ ...form, student_no: e.target.value })} placeholder="e.g. 0401" /></div>
@@ -85,7 +91,10 @@ export default function Users() {
                   </td>
                   <td><span className={`badge ${u.is_active ? 'ok' : 'danger'}`}>{u.is_active ? 'active' : 'disabled'}</span></td>
                   <td className="hint">{when(u.created_at)}</td>
-                  <td><button className="btn sm" onClick={() => void toggle(u.id, !u.is_active)}>{u.is_active ? 'Disable' : 'Enable'}</button></td>
+                  <td className="row" style={{ gap: '.4rem', flexWrap: 'nowrap' }}>
+                    <button className="btn sm" onClick={() => void toggle(u.id, !u.is_active)}>{u.is_active ? 'Disable' : 'Enable'}</button>
+                    <button className="btn sm" onClick={() => void remove(u)}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

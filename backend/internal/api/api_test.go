@@ -517,6 +517,51 @@ func TestAdminCreatesAccountsAndRoles(t *testing.T) {
 	}
 }
 
+func TestDeleteUser(t *testing.T) {
+	h := newHarness(t)
+	adminID, adminTok := h.user(auth.RoleAdmin)
+
+	// A plain account goes.
+	spare, _ := h.user(auth.RoleEvaluator)
+	if st, _ := h.do("DELETE", "/api/users/"+spare, adminTok, nil); st != 200 {
+		t.Fatalf("delete spare account: %d", st)
+	}
+	var n int
+	if err := h.db.QueryRowContext(context.Background(), `SELECT COUNT(*) FROM users WHERE id = ?`, spare).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatal("account still present")
+	}
+
+	// You cannot delete yourself.
+	if st, _ := h.do("DELETE", "/api/users/"+adminID, adminTok, nil); st != 422 {
+		t.Fatalf("self delete: %d", st)
+	}
+
+	// An evaluator with marks survives, but can be disabled.
+	student, course := h.fixtures(adminTok)
+	if st, body := h.uploadScript(adminTok, course, student, "DEL"+h.sfx); st != 201 {
+		t.Fatalf("upload: %d %v", st, body)
+	}
+	var scriptID string
+	if err := h.db.QueryRowContext(context.Background(), `SELECT id FROM scripts LIMIT 1`).Scan(&scriptID); err != nil {
+		t.Fatal(err)
+	}
+	marker, _ := h.user(auth.RoleEvaluator)
+	if _, err := h.db.ExecContext(context.Background(),
+		`INSERT INTO marks (id, script_id, slot, evaluator_id, score) VALUES (?,?, 'FIRST', ?, 60)`,
+		uuid.NewString(), scriptID, marker); err != nil {
+		t.Fatal(err)
+	}
+	if st, _ := h.do("DELETE", "/api/users/"+marker, adminTok, nil); st != 409 {
+		t.Fatalf("delete evaluator with marks: %d", st)
+	}
+	if st, _ := h.do("PATCH", "/api/users/"+marker, adminTok, map[string]any{"is_active": false}); st != 200 {
+		t.Fatalf("disable instead: %d", st)
+	}
+}
+
 func TestSelfSignUp(t *testing.T) {
 	h := newHarness(t)
 

@@ -64,6 +64,7 @@ func (s *Server) Routes() http.Handler {
 	mux.Handle("GET /api/users", s.authed(s.handleListUsers, auth.RoleAdmin))
 	mux.Handle("POST /api/users", s.authed(s.handleCreateUser, auth.RoleAdmin))
 	mux.Handle("PATCH /api/users/{id}", s.authed(s.handlePatchUser, auth.RoleAdmin))
+	mux.Handle("DELETE /api/users/{id}", s.authed(s.handleDeleteUser, auth.RoleAdmin))
 
 	// Script registration and appointment.
 	mux.Handle("GET /api/scripts", s.authed(s.handleListScripts, auth.RoleAdmin))
