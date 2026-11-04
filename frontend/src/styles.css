@@ -70,7 +70,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .identity { min-width: 0; }
 .org { font-family: var(--serif); font-size: 1.55rem; font-weight: 700; color: var(--green-dark); line-height: 1.15; letter-spacing: -.01em; }
 .org-sub { margin: .2rem 0 0; font-size: .85rem; color: var(--ink-soft); }
-.org-sys { margin: .15rem 0 0; font-size: .8rem; color: var(--green); font-weight: 600; letter-spacing: .02em; }
 .who { margin-left: auto; display: flex; align-items: center; gap: .5rem; font-size: .82rem; color: var(--ink-soft); flex-wrap: wrap; justify-content: flex-end; }
 .who-name { font-weight: 600; color: var(--ink); }
 .who-role { text-transform: uppercase; letter-spacing: .08em; font-size: .68rem; color: var(--ink-soft); border-left: 1px solid var(--line); padding-left: .5rem; }
@@ -254,4 +253,139 @@ tbody tr:last-child td { border-bottom: 1px solid var(--line); }
   .grid { grid-template-columns: 1fr; }
   .page-head { flex-direction: column; }
   .pdf-frame { height: 60vh; }
+}
+
+/* =====================================================================
+   Refinement pass — depth, rhythm and micro-detail on the same palette.
+   ===================================================================== */
+
+:root {
+  --shadow-1: 0 1px 2px rgba(8, 43, 31, .06), 0 1px 3px rgba(8, 43, 31, .04);
+  --shadow-2: 0 2px 6px rgba(8, 43, 31, .09), 0 8px 20px -8px rgba(8, 43, 31, .12);
+  --radius: 3px;
+}
+
+h1, h2, h3, h4 { text-wrap: balance; letter-spacing: -.012em; }
+h1 { font-size: 1.58rem; }
+h2 { font-size: 1.18rem; letter-spacing: -.006em; }
+
+p, .hint { text-wrap: pretty; }
+
+.masthead .wrap { gap: 1.15rem; padding-top: 1.15rem; padding-bottom: 1.15rem; }
+.crest { filter: drop-shadow(0 1px 2px rgba(8, 43, 31, .18)); }
+.org { letter-spacing: -.015em; }
+
+.navlink { position: relative; transition: background .14s ease, color .14s ease; }
+.navlink.active::after { content: ""; position: absolute; left: .95rem; right: .95rem; bottom: -3px; height: 3px; background: var(--gold); }
+
+.btn { border-radius: var(--radius); transition: background .14s ease, box-shadow .14s ease, transform .08s ease; }
+.btn:active { transform: translateY(1px); }
+.btn.secondary { box-shadow: var(--shadow-1); }
+.btn.secondary:hover { background: var(--green-soft); }
+
+.card { border-radius: var(--radius); box-shadow: var(--shadow-1); }
+.card > h2 { display: flex; align-items: center; gap: .55rem; }
+.card > h2::before { content: ""; width: 3px; height: .95em; background: var(--gold); border-radius: 1px; flex: none; }
+
+.field label { font-size: .78rem; letter-spacing: .07em; }
+.field input, .field select, .field textarea { border-radius: var(--radius); transition: border-color .14s ease, box-shadow .14s ease; }
+.field input:hover, .field select:hover, .field textarea:hover { border-color: #9aa89f; }
+.field input:focus, .field select:focus, .field textarea:focus { box-shadow: 0 0 0 3px rgba(193, 154, 63, .22); }
+
+.badge { border-radius: 2px; display: inline-flex; align-items: center; gap: .34rem; }
+.badge::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex: none; }
+.badge:empty::before { display: none; }
+
+table td { font-variant-numeric: tabular-nums; }
+thead th { letter-spacing: .09em; }
+tbody tr { transition: background .12s ease; }
+tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
+
+.summary-row, .task-item { transition: background .12s ease; }
+.summary-row:hover, .task-item:hover { background: #fcfbf8; }
+.summary-key { text-transform: uppercase; letter-spacing: .05em; font-size: .72rem; padding-top: .15rem; }
+
+.kpi { border-radius: var(--radius); box-shadow: var(--shadow-1); border-left-width: 3px; border-top-color: var(--line-soft); }
+.kpi .n { font-variant-numeric: tabular-nums; }
+.kpi .l { margin-top: .1rem; }
+
+.empty { border: 1px dashed var(--line); border-radius: var(--radius); background: #fcfbf8; text-align: center; }
+
+.page-head h1 { margin-bottom: .35rem; }
+.page-head { border-bottom-width: 1px; border-bottom-color: var(--line); }
+.caption { color: var(--green); font-weight: 700; letter-spacing: .12em; font-size: .72rem; }
+
+.note { border-radius: 0 var(--radius) var(--radius) 0; box-shadow: var(--shadow-1); }
+.error-summary { border-radius: var(--radius); box-shadow: var(--shadow-1); }
+
+.footer { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05); }
+
+/* login: two-panel composition with the crest as a watermark */
+.login-body { padding: 2.5rem 1.5rem 4rem; }
+.login-card { border-radius: var(--radius); box-shadow: 0 18px 44px -18px rgba(0, 0, 0, .55); position: relative; overflow: hidden; }
+.login-card::after {
+  content: ""; position: absolute; right: -28px; top: 8px; width: 120px; height: 144px;
+  background: url("/pust-logo.png") center / contain no-repeat; opacity: .07; pointer-events: none;
+}
+.login-card .brand-mark { letter-spacing: -.01em; }
+
+.pdf-frame { border-radius: var(--radius); box-shadow: var(--shadow-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+@media (max-width: 640px) {
+  h1 { font-size: 1.24rem; }
+  .card { box-shadow: none; }
+  .kpi { box-shadow: none; }
+  .login-card::after { display: none; }
+}
+
+/* =====================================================================
+   Motion — short, eased, and only when the user allows it.
+   ===================================================================== */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-scale {
+  from { opacity: 0; transform: scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* page content settles in, top-down */
+  .main > .wrap > * { animation: rise .28s cubic-bezier(.2, .7, .3, 1) backwards; }
+  .main > .wrap > *:nth-child(1) { animation-delay: .02s; }
+  .main > .wrap > *:nth-child(2) { animation-delay: .06s; }
+  .main > .wrap > *:nth-child(3) { animation-delay: .1s; }
+  .main > .wrap > *:nth-child(4) { animation-delay: .14s; }
+  .main > .wrap > *:nth-child(n+5) { animation-delay: .17s; }
+
+  .card { transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease; }
+  .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); border-color: #c9c2b2; }
+
+  .navlink::after {
+    transform: scaleX(0); transform-origin: left; transition: transform .18s ease;
+  }
+  .navlink.active::after { transform: scaleX(1); }
+
+  .note, .error-summary { animation: slide-in .24s ease backwards; }
+  .login-card { animation: fade-scale .32s cubic-bezier(.2, .7, .3, 1) backwards; }
+
+  .btn { transition: background .16s ease, box-shadow .16s ease, transform .08s ease; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(1px); }
+
+  tbody tr { animation: rise .22s ease backwards; }
+  tbody tr:nth-child(2) { animation-delay: .02s; }
+  tbody tr:nth-child(3) { animation-delay: .04s; }
+  tbody tr:nth-child(4) { animation-delay: .06s; }
+  tbody tr:nth-child(n+5) { animation-delay: .08s; }
 }

@@ -57,7 +57,6 @@ function Layout({ children }) {
           <div className="identity">
             <div className="org">University Examination Board</div>
             <div className="org-sub">Office of the Controller of Examinations · পরীক্ষা নিয়ন্ত্রণ বিভাগ</div>
-            <div className="org-sys">Script Evaluation System — anonymised double-blind marking</div>
           </div>
           <div className="who">
             <span className="who-name">{user?.full_name}</span>
