@@ -1,0 +1,74 @@
+name: secure-exam-eval
+
+services:
+  db:
+    image: mysql:8.4
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_local_pw}
+      MYSQL_DATABASE: exam_eval
+      MYSQL_USER: exam
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-exam_local_pw}
+    ports:
+      - "127.0.0.1:${DB_PORT:-53306}:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uexam", "-p${MYSQL_PASSWORD:-exam_local_pw}"]
+      interval: 5s
+      timeout: 4s
+      retries: 30
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    image: secure-exam-eval-backend:local
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      ADDR: ":8080"
+      DATABASE_URL: exam:${MYSQL_PASSWORD:-exam_local_pw}@tcp(db:3306)/exam_eval?parseTime=true&multiStatements=true&charset=utf8mb4
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me-0123456789abcdef}
+      ACCESS_TTL_MINUTES: "15"
+      REFRESH_TTL_HOURS: "168"
+      STORAGE_DRIVER: local
+      STORAGE_DIR: /data/scripts
+      MAX_UPLOAD_MB: "25"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
+      COOKIE_SECURE: "false"
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@uni.test}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-ExamOffice#2026}
+    volumes:
+      - scripts:/data/scripts
+    restart: unless-stopped
+
+  web:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  seed:
+    image: secure-exam-eval-backend:local
+    profiles: ["seed"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: exam:${MYSQL_PASSWORD:-exam_local_pw}@tcp(db:3306)/exam_eval?parseTime=true&multiStatements=true&charset=utf8mb4
+      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me-0123456789abcdef}
+      STORAGE_DRIVER: local
+      STORAGE_DIR: /data/scripts
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@uni.test}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-ExamOffice#2026}
+    volumes:
+      - scripts:/data/scripts
+    entrypoint: ["/app/seed"]
+
+volumes:
+  mysqldata:
+  scripts:

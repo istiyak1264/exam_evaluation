@@ -1,0 +1,12 @@
+.env
+*.log
+node_modules/
+frontend/dist/
+backend/server
+backend/seed
+.DS_Store
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+crash.log

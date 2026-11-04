@@ -1,0 +1,78 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: exam_eval_test
+          MYSQL_USER: exam
+          MYSQL_PASSWORD: examtest
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h127.0.0.1 -uroot -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+          cache-dependency-path: backend/go.sum
+      - run: gofmt -l . | tee /tmp/fmt && test ! -s /tmp/fmt
+      - run: go vet ./...
+      - run: go test -race ./...
+        env:
+          TEST_DATABASE_URL: exam:examtest@tcp(127.0.0.1:3306)/exam_eval_test?parseTime=true&multiStatements=true
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npx tsc --noEmit
+      - run: npm run build
+
+  images:
+    if: github.ref == 'refs/heads/main'
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push
+        env:
+          REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          TAG: ${{ github.sha }}
+        run: |
+          docker build -t "$REGISTRY/${{ secrets.ECR_BACKEND }}:$TAG" ./backend
+          docker build -t "$REGISTRY/${{ secrets.ECR_WEB }}:$TAG" ./frontend
+          docker push "$REGISTRY/${{ secrets.ECR_BACKEND }}:$TAG"
+          docker push "$REGISTRY/${{ secrets.ECR_WEB }}:$TAG"
