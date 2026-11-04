@@ -31,7 +31,6 @@ export default function Login() {
   return (
     <AuthShell
       title="Sign in"
-      intro="Use the account issued to you, or one you created. Examiners only ever see the cover-sheet code of the scripts assigned to them."
       footer={<>No account yet? <a href="/signup">Create one</a></>}
     >
       <form onSubmit={submit}>

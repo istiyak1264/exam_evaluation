@@ -36,7 +36,6 @@ export default function Signup() {
   return (
     <AuthShell
       title="Create an account"
-      intro="Students and external examiners may register here. Administrator accounts are created by the examination board."
       footer={<>Already registered? <a href="/login">Sign in</a></>}
     >
       <form onSubmit={submit}>
@@ -80,13 +79,11 @@ export default function Signup() {
           <>
             <div className="field">
               <label htmlFor="student_no">Student ID</label>
-              <span className="hint" id="no-hint">Your matriculation number as printed on your identity card.</span>
-              <input id="student_no" required aria-describedby="no-hint" value={form.student_no} onChange={set('student_no')} placeholder="e.g. MAT/2026/0101" />
+              <input id="student_no" required value={form.student_no} onChange={set('student_no')} placeholder="e.g. 2301" />
             </div>
             <div className="field">
               <label htmlFor="registration_no">Registration number</label>
-              <span className="hint" id="reg-hint">Issued by the examination office. Both values must match the record held for you.</span>
-              <input id="registration_no" required aria-describedby="reg-hint" value={form.registration_no} onChange={set('registration_no')} placeholder="e.g. REG-2026-0101" />
+              <input id="registration_no" required value={form.registration_no} onChange={set('registration_no')} placeholder="e.g. 1011" />
             </div>
           </>
         )}
