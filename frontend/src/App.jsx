@@ -44,17 +44,6 @@ const links = [
   { to: '/admin/audit', label: 'Audit trail', roles: ['ADMIN'] },
 ]
 
-function Crest() {
-  return (
-    <svg className="crest" viewBox="0 0 64 74" role="img" aria-label="Institutional crest">
-      <path d="M32 2 60 10v31c0 16-12 27-28 31C16 68 4 57 4 41V10L32 2Z" fill="#0b3d2e" stroke="#f42a41" strokeWidth="2.5" />
-      <path d="M32 9 53 15v26c0 12-9 21-21 25C20 62 11 53 11 41V15L32 9Z" fill="#12664a" />
-      <path d="M20 27h24v3H20zM20 34h24v3H20zM20 41h24v3H20z" fill="#f2f6f3" opacity=".9" />
-      <path d="M28 21h8v4h-8z" fill="#f42a41" />
-    </svg>
-  )
-}
-
 function Layout({ children }) {
   const { user, signOut } = useAuth()
 
@@ -62,20 +51,9 @@ function Layout({ children }) {
     <div className="shell">
       <SkipLink />
 
-      <div className="utility">
-        <div className="wrap">
-          <span className="gov">গণপ্রজাতন্ত্রী বাংলাদেশ · People&apos;s Republic of Bangladesh</span>
-          <span className="util-right">
-            <span>Examination Control Room</span>
-            <span className="mono">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-            <span><strong>বাংলা</strong>&nbsp;|&nbsp;English</span>
-          </span>
-        </div>
-      </div>
-
       <header className="masthead">
         <div className="wrap">
-          <Crest />
+          <img className="crest" src="/pust-logo.png" alt="University crest" />
           <div className="identity">
             <div className="org">University Examination Board</div>
             <div className="org-sub">Office of the Controller of Examinations · পরীক্ষা নিয়ন্ত্রণ বিভাগ</div>
