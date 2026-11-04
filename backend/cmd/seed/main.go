@@ -42,9 +42,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// The password is never baked in: it comes from SEED_PASSWORD.
 	pw := os.Getenv("SEED_PASSWORD")
 	if pw == "" {
-		pw = "ExamOffice#2026"
+		log.Fatal("SEED_PASSWORD is required (set it in .env)")
 	}
 
 	people := []person{
@@ -130,11 +131,11 @@ func main() {
 	}
 
 	_ = api.NewLimiter
-	fmt.Println("seed complete")
-	fmt.Printf("admin    : %s / %s\n", cfg.BootstrapEmail, cfg.BootstrapPass)
-	fmt.Printf("registrar: registrar@uni.test / %s\n", pw)
-	fmt.Printf("examiner : examiner.one@uni.test / %s\n", pw)
-	fmt.Printf("student  : adaeze@student.test / %s\n", pw)
+	fmt.Println("seed complete — sign in with any of these, password = SEED_PASSWORD:")
+	fmt.Println("  registrar@uni.test")
+	fmt.Println("  examiner.one@uni.test")
+	fmt.Println("  adaeze@student.test")
+	fmt.Println("the admin account is whatever BOOTSTRAP_ADMIN_EMAIL names")
 }
 
 func ensureUser(ctx context.Context, st *store.Store, p person, pw string) (string, error) {

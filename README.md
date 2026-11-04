@@ -53,23 +53,27 @@ position.
 ## Run it
 
 ```bash
-cp .env.example .env          # then edit JWT_SECRET
+cp .env.example .env          # then set JWT_SECRET and the credentials
 docker compose up -d --build  # db, api, web
 docker compose --profile seed run --rm seed   # optional demo cohort
 ```
 
 Web on <http://localhost:8090> (8080 left free for other local tooling; change `WEB_PORT`).
 
-Seeded logins all use `ExamOffice#2026`:
+No credential is hardcoded: everything comes from `.env`. The only account the
+application itself creates is the bootstrap admin named by
+`BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD`.
+
+The demo cohort's password is whatever `SEED_PASSWORD` holds, and its accounts are
+identities in `backend/cmd/seed/main.go`:
 
 | Account | Role |
 |---|---|
-| `admin@uni.test` | ADMIN |
 | `registrar@uni.test` | HALL_MANAGER |
 | `examiner.one@uni.test` | EVALUATOR |
 | `adaeze@student.test` | STUDENT |
 
-Change these before any real use.
+Change `BOOTSTRAP_ADMIN_PASSWORD` (and `SEED_PASSWORD`) before any real use.
 
 ## Tests
 

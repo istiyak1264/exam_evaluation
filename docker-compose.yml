@@ -1,20 +1,24 @@
 name: secure-exam-eval
 
+# Every credential comes from .env — nothing is baked into this file.
+# Copy .env.example to .env and fill it in; `:?` makes compose fail loudly
+# rather than silently starting with a guessable password.
+
 services:
   db:
     image: mysql:8.4
     command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_local_pw}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
       MYSQL_DATABASE: exam_eval
       MYSQL_USER: exam
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-exam_local_pw}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
     ports:
       - "127.0.0.1:${DB_PORT:-53306}:3306"
     volumes:
       - mysqldata:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uexam", "-p${MYSQL_PASSWORD:-exam_local_pw}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uexam -p\"$$MYSQL_PASSWORD\""]
       interval: 5s
       timeout: 4s
       retries: 30
@@ -29,17 +33,17 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-development}
       ADDR: ":8080"
-      DATABASE_URL: exam:${MYSQL_PASSWORD:-exam_local_pw}@tcp(db:3306)/exam_eval?parseTime=true&multiStatements=true&charset=utf8mb4
-      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me-0123456789abcdef}
+      DATABASE_URL: exam:${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}@tcp(db:3306)/exam_eval?parseTime=true&multiStatements=true
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       ACCESS_TTL_MINUTES: "15"
       REFRESH_TTL_HOURS: "168"
       STORAGE_DRIVER: local
       STORAGE_DIR: /data/scripts
       MAX_UPLOAD_MB: "25"
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8090}
       COOKIE_SECURE: "false"
-      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@uni.test}
-      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-ExamOffice#2026}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:?set BOOTSTRAP_ADMIN_EMAIL in .env}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?set BOOTSTRAP_ADMIN_PASSWORD in .env}
     volumes:
       - scripts:/data/scripts
     restart: unless-stopped
@@ -49,9 +53,11 @@ services:
     depends_on:
       - backend
     ports:
-      - "${WEB_PORT:-8080}:8080"
+      - "${WEB_PORT:-8090}:8080"
     restart: unless-stopped
 
+  # Demo cohort. Accounts are created with SEED_PASSWORD; identities live in
+  # backend/cmd/seed/main.go, the password does not.
   seed:
     image: secure-exam-eval-backend:local
     profiles: ["seed"]
@@ -59,12 +65,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: exam:${MYSQL_PASSWORD:-exam_local_pw}@tcp(db:3306)/exam_eval?parseTime=true&multiStatements=true&charset=utf8mb4
-      JWT_SECRET: ${JWT_SECRET:-local-dev-secret-change-me-0123456789abcdef}
+      DATABASE_URL: exam:${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}@tcp(db:3306)/exam_eval?parseTime=true&multiStatements=true
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       STORAGE_DRIVER: local
       STORAGE_DIR: /data/scripts
-      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@uni.test}
-      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-ExamOffice#2026}
+      SEED_PASSWORD: ${SEED_PASSWORD:?set SEED_PASSWORD in .env}
     volumes:
       - scripts:/data/scripts
     entrypoint: ["/app/seed"]
