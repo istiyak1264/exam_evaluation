@@ -22,13 +22,20 @@ export function AuthProvider({ children }) {
     setUser(res.user)
   }, [])
 
+  const signUp = useCallback(async (payload) => {
+    const res = await api.register(payload)
+    tokens.set(res.access_token, res.refresh_token)
+    setUser(res.user)
+    return res.user
+  }, [])
+
   const signOut = useCallback(async () => {
     try { await api.logout() } catch { /* best effort */ }
     tokens.clear()
     setUser(null)
   }, [])
 
-  const value = useMemo(() => ({ user, loading, signIn, signOut }), [user, loading, signIn, signOut])
+  const value = useMemo(() => ({ user, loading, signIn, signUp, signOut }), [user, loading, signIn, signUp, signOut])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

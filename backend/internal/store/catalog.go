@@ -169,3 +169,22 @@ func (s *Store) CourseByID(ctx context.Context, id string) (*models.Course, erro
 	}
 	return &m, nil
 }
+
+// UnclaimedStudent looks a candidate up by matriculation number for sign-up
+// linking. Returns ErrNotFound when the record does not exist or is taken.
+func (s *Store) UnclaimedStudent(ctx context.Context, studentNo string) (*models.Student, error) {
+	return scanStudent(s.DB.QueryRowContext(ctx, `
+		SELECT `+studentCols+` FROM students st
+		JOIN academic_sessions ses ON ses.id = st.session_id
+		WHERE st.student_no = ? AND st.user_id IS NULL`, studentNo))
+}
+
+// ClaimStudent links a portal account only if the record is still unclaimed.
+func (s *Store) ClaimStudent(ctx context.Context, studentID, userID string) (bool, error) {
+	res, err := s.DB.ExecContext(ctx, `UPDATE students SET user_id = ? WHERE id = ? AND user_id IS NULL`, userID, studentID)
+	if err != nil {
+		return false, mapErr(err)
+	}
+	n, _ := res.RowsAffected()
+	return n > 0, nil
+}

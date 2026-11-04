@@ -2,11 +2,13 @@ package api
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/istiyak/secure-exam-eval/internal/auth"
 	"github.com/istiyak/secure-exam-eval/internal/models"
+	"github.com/istiyak/secure-exam-eval/internal/store"
 )
 
 type loginReq struct {
@@ -63,6 +65,68 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	s.DB.Audit(r.Context(), row.ID, row.Role, "LOGIN", "user", row.ID, nil)
 	s.issue(r.Context(), w, &row.User)
+}
+
+type registerReq struct {
+	FullName  string `json:"full_name"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	Role      string `json:"role"`
+	StudentNo string `json:"student_no"`
+}
+
+// handleRegister is the public sign-up. Only candidates and examiners may
+// self-register; administrators are created by an administrator.
+func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
+	var req registerReq
+	if !decode(w, r, &req) {
+		return
+	}
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	req.FullName = strings.TrimSpace(req.FullName)
+	req.Role = strings.ToUpper(strings.TrimSpace(req.Role))
+	req.StudentNo = strings.TrimSpace(req.StudentNo)
+
+	if req.Role != string(auth.RoleStudent) && req.Role != string(auth.RoleEvaluator) {
+		writeErr(w, http.StatusUnprocessableEntity, "role must be STUDENT or EVALUATOR")
+		return
+	}
+	if !strings.Contains(req.Email, "@") || len(req.FullName) < 3 {
+		writeErr(w, http.StatusUnprocessableEntity, "a full name and valid email are required")
+		return
+	}
+	key := "signup|" + clientIP(r)
+	if !s.Limiter.allow(key) {
+		writeErr(w, http.StatusTooManyRequests, "too many attempts, wait a minute")
+		return
+	}
+	hash, err := auth.HashPassword(req.Password)
+	if err != nil {
+		writeErr(w, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+	u, err := s.DB.CreateUser(r.Context(), req.Email, hash, req.FullName, req.Role)
+	if err != nil {
+		if errors.Is(err, store.ErrConflict) {
+			writeErr(w, http.StatusConflict, "an account with that email already exists")
+			return
+		}
+		mapStoreErr(w, err)
+		return
+	}
+
+	// A candidate who gives their matriculation number is linked to the
+	// record the office already holds, so their scripts appear immediately.
+	linked := false
+	if req.Role == string(auth.RoleStudent) && req.StudentNo != "" {
+		if st, err := s.DB.UnclaimedStudent(r.Context(), req.StudentNo); err == nil {
+			if ok, err := s.DB.ClaimStudent(r.Context(), st.ID, u.ID); err == nil && ok {
+				linked = true
+			}
+		}
+	}
+	s.DB.Audit(r.Context(), u.ID, u.Role, "SIGNED_UP", "user", u.ID, map[string]any{"linked_student": linked})
+	s.issue(r.Context(), w, u)
 }
 
 type refreshReq struct {

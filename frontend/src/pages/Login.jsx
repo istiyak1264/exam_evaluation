@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
-import { ErrorSummary, SkipLink } from '../components/gov'
+import { AuthShell } from '../components/AuthShell'
+import { ErrorSummary } from '../components/gov'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -20,25 +21,19 @@ export default function Login() {
       await signIn(email.trim(), password)
       nav(loc.state?.from ?? '/', { replace: true })
     } catch (err) {
-      setError((err).message)
+      setError(err.message)
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <div className="login-wrap">
-      <SkipLink />
-      <div className="login-bar">
-        Script Evaluation System
-        <small>Examination office</small>
-      </div>
-      <div className="login-body">
-      <form className="login-card" onSubmit={submit}>
-        <div className="login-brand">
-          <div className="brand-mark">Sign in</div>
-          <small>Anonymised double-blind marking</small>
-        </div>
+    <AuthShell
+      title="Sign in"
+      intro="Use the account issued to you, or one you created. Examiners only ever see the cover-sheet code of the scripts assigned to them."
+      footer={<>No account yet? <a href="/signup">Create one</a></>}
+    >
+      <form onSubmit={submit}>
         <ErrorSummary errors={error ? [error] : []} />
         <div className="field">
           <label htmlFor="email">Email</label>
@@ -48,12 +43,8 @@ export default function Login() {
           <label htmlFor="password">Password</label>
           <input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
-        <button className="btn primary" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
-        <p className="hint" style={{ marginTop: '1.2rem', marginBottom: 0 }}>
-          Students: use the account issued by the examination office. Examiners only see the scripts assigned to them, without names.
-        </p>
+        <button className="btn primary" style={{ width: '100%' }} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
       </form>
-      </div>
-    </div>
+    </AuthShell>
   )
 }

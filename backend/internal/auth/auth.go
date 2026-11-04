@@ -18,9 +18,9 @@ import (
 type Role string
 
 const (
-	RoleAdmin       Role = "ADMIN"
-	RoleEvaluator   Role = "EVALUATOR"
-	RoleStudent     Role = "STUDENT"
+	RoleAdmin     Role = "ADMIN"
+	RoleEvaluator Role = "EVALUATOR"
+	RoleStudent   Role = "STUDENT"
 )
 
 var ErrInvalidToken = errors.New("invalid or expired token")

@@ -447,3 +447,51 @@ func TestUploadValidation(t *testing.T) {
 		t.Fatalf("duplicate student: %d", st)
 	}
 }
+
+func TestSelfSignUp(t *testing.T) {
+	h := newHarness(t)
+
+	// Only candidates and examiners may self-register.
+	if st, _ := h.do("POST", "/api/auth/register", "", map[string]any{
+		"full_name": "Admin Want", "email": "admin2@uni.test", "password": "longpassword1", "role": "ADMIN"}); st != 422 {
+		t.Fatalf("admin signup: %d", st)
+	}
+	st, body := h.do("POST", "/api/auth/register", "", map[string]any{
+		"full_name": "New Examiner", "email": "new.examiner@uni.test", "password": "longpassword1", "role": "EVALUATOR"})
+	if st != 200 {
+		t.Fatalf("evaluator signup: %d %v", st, body)
+	}
+	if body["access_token"] == "" || body["user"].(map[string]any)["role"] != "EVALUATOR" {
+		t.Fatalf("unexpected signup body: %v", body)
+	}
+	// The issued token works straight away.
+	if st, _ := h.do("GET", "/api/queue", body["access_token"].(string), nil); st != 200 {
+		t.Fatalf("token from signup unusable: %d", st)
+	}
+	// Duplicate email is refused.
+	if st, _ := h.do("POST", "/api/auth/register", "", map[string]any{
+		"full_name": "Dup", "email": "new.examiner@uni.test", "password": "longpassword1", "role": "STUDENT"}); st != 409 {
+		t.Fatalf("duplicate signup: %d", st)
+	}
+	// Weak password is refused.
+	if st, _ := h.do("POST", "/api/auth/register", "", map[string]any{
+		"full_name": "Short Pw", "email": "short@uni.test", "password": "abc", "role": "STUDENT"}); st != 422 {
+		t.Fatalf("short password: %d", st)
+	}
+
+	// A student who knows their matriculation number is linked to the record.
+	_, adminTok := h.user(auth.RoleAdmin)
+	studentID, _ := h.fixtures(adminTok)
+	var no string
+	if err := h.db.QueryRowContext(context.Background(), `SELECT student_no FROM students WHERE id = ?`, studentID).Scan(&no); err != nil {
+		t.Fatal(err)
+	}
+	st, body = h.do("POST", "/api/auth/register", "", map[string]any{
+		"full_name": "Ada Selfserve", "email": "selfserve@uni.test", "password": "longpassword1", "role": "STUDENT", "student_no": no})
+	if st != 200 {
+		t.Fatalf("student signup: %d %v", st, body)
+	}
+	if st, mine := h.do("GET", "/api/results/mine", body["access_token"].(string), nil); st != 200 {
+		t.Fatalf("signup did not link the student record: %d %v", st, mine)
+	}
+}
