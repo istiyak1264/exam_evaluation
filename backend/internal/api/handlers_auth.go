@@ -112,8 +112,12 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	if req.Role == string(auth.RoleStudent) {
 		st, err := s.DB.UnclaimedStudent(r.Context(), req.StudentNo, req.RegNo)
 		if err != nil {
+			if errors.Is(err, store.ErrConflict) {
+				writeErr(w, http.StatusConflict, "that student record already has an account — sign in instead")
+				return
+			}
 			writeErr(w, http.StatusUnprocessableEntity,
-				"no unclaimed student record matches that student ID and registration number")
+				"no student record matches that student ID and registration number")
 			return
 		}
 		candidate = st

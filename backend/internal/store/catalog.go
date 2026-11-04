@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"strings"
 
 	"github.com/istiyak/secure-exam-eval/internal/models"
 )
@@ -178,11 +180,49 @@ func (s *Store) CourseByID(ctx context.Context, id string) (*models.Course, erro
 // sign-up linking. Mismatched pairs and already-claimed records return
 // ErrNotFound.
 func (s *Store) UnclaimedStudent(ctx context.Context, studentNo, registrationNo string) (*models.Student, error) {
-	return scanStudent(s.DB.QueryRowContext(ctx, `
-		SELECT `+studentCols+` FROM students st
+	// Exact match first, then a suffixed match so an abbreviated number such as
+	// "0301" also finds "MAT/2026/0301".
+	for _, unclaimedOnly := range []bool{true, false} {
+		m, err := s.matchStudent(ctx, studentNo, registrationNo, unclaimedOnly)
+		if err == nil {
+			if unclaimedOnly {
+				return m, nil
+			}
+			return m, ErrConflict // the record exists but already belongs to someone
+		}
+		if !errors.Is(err, ErrNotFound) {
+			return nil, err
+		}
+	}
+	return nil, ErrNotFound
+}
+
+func (s *Store) matchStudent(ctx context.Context, studentNo, registrationNo string, unclaimedOnly bool) (*models.Student, error) {
+	noSQL, noArgs := identClause("st.student_no", studentNo)
+	regSQL, regArgs := identClause("st.registration_no", registrationNo)
+	q := `
+		SELECT ` + studentCols + ` FROM students st
 		JOIN academic_sessions ses ON ses.id = st.session_id
-		WHERE st.student_no = ? AND st.registration_no = ? AND st.user_id IS NULL`,
-		studentNo, registrationNo))
+		WHERE ` + noSQL + ` AND ` + regSQL
+	if unclaimedOnly {
+		q += ` AND st.user_id IS NULL`
+	}
+	return scanStudent(s.DB.QueryRowContext(ctx, q, append(noArgs, regArgs...)...))
+}
+
+// identClause matches an identifier case-insensitively, and by trailing digits
+// when the input is numeric only.
+func identClause(col, input string) (string, []any) {
+	in := strings.ToUpper(strings.TrimSpace(input))
+	if in == "" {
+		return col + " = ?", []any{""}
+	}
+	for _, r := range in {
+		if r < '0' || r > '9' {
+			return "UPPER(" + col + ") = ?", []any{in}
+		}
+	}
+	return "(UPPER(" + col + ") = ? OR " + col + " LIKE ?)", []any{in, "%" + in}
 }
 
 // ClaimStudent links a portal account only if the record is still unclaimed.
