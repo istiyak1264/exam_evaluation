@@ -50,6 +50,7 @@ function Layout({ children }) {
   return (
     <div className="shell">
       <SkipLink />
+      <div className="flag-band" aria-hidden="true" />
 
       <header className="masthead">
         <div className="wrap">

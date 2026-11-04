@@ -9,7 +9,7 @@
   --green-soft: #eaf3ee;
   --gold: #c19a3f;
   --gold-soft: #f6efdd;
-  --flag: #d7213a;
+  --flag: #f42a41;
   --ink: #131f1a;
   --ink-soft: #4c5a54;
   --line: #dcd7cb;
@@ -40,6 +40,9 @@
 
 body { margin: 0; min-height: 100vh; background: var(--bg); }
 
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+.flag-band { height: 4px; background: var(--flag); flex: none; }
+
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 1.5rem; width: 100%; }
 
 h1, h2, h3, h4 { margin: 0 0 .5rem; line-height: 1.22; font-weight: 700; color: var(--green-dark); }
@@ -62,9 +65,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ---------- masthead ---------- */
 
-.masthead { background: var(--paper); border-bottom: 1px solid var(--line); box-shadow: inset 0 -4px 0 -3px var(--gold); }
+.masthead { background: var(--paper); border-bottom: 1px solid var(--line); }
 .masthead .wrap { display: flex; align-items: center; gap: 1.1rem; padding-top: 1rem; padding-bottom: 1rem; }
-.crest { width: 62px; height: 74px; object-fit: contain; flex: none; }
+.crest { width: 62px; height: 74px; object-fit: contain; flex: none; padding: 4px; border-bottom: 2px solid var(--flag); background: #fff; }
 .identity { min-width: 0; }
 .org { font-family: var(--serif); font-size: 1.55rem; font-weight: 700; color: var(--green-dark); line-height: 1.15; letter-spacing: -.01em; }
 .org-sub { margin: .2rem 0 0; font-size: .85rem; color: var(--ink-soft); }
@@ -85,7 +88,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-bottom: 4px solid transparent; margin-bottom: -3px;
 }
 .navlink:hover { background: rgba(255, 255, 255, .12); color: #fff; }
-.navlink.active { background: var(--green-dark); color: #fff; border-bottom-color: var(--gold); }
+.navlink.active { background: var(--green-dark); color: #fff; border-bottom-color: var(--flag); }
 
 /* ---------- buttons ---------- */
 
@@ -211,6 +214,7 @@ tbody tr:last-child td { border-bottom: 1px solid var(--line); }
 /* ---------- login ---------- */
 
 .login-wrap { min-height: 100vh; background: var(--green-dark); display: flex; flex-direction: column; border-top: 5px solid var(--flag); }
+.login-band { height: 4px; background: var(--flag); }
 .login-bar { border-bottom: 1px solid rgba(255, 255, 255, .18); color: #fff; font-family: var(--serif); font-size: 1.15rem; font-weight: 700; padding: .9rem 1.5rem; }
 .login-bar small { display: block; font-family: var(--sans); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: #a9c4b8; font-weight: 400; margin-top: .2rem; }
 .login-body { flex: 1; display: grid; place-items: center; padding: 2rem 1.5rem 3rem; }
@@ -221,7 +225,7 @@ tbody tr:last-child td { border-bottom: 1px solid var(--line); }
 
 /* ---------- footer ---------- */
 
-.footer { background: var(--green-dark); color: #c3d8cf; border-top: 4px solid var(--gold); padding: 1.8rem 0 1rem; font-size: .85rem; margin-top: 2rem; }
+.footer { background: var(--green-dark); color: #c3d8cf; border-top: 4px solid var(--flag); padding: 1.8rem 0 1rem; font-size: .85rem; margin-top: 2rem; }
 .footer h2 { color: #fff; font-size: .82rem; text-transform: uppercase; letter-spacing: .1em; margin-bottom: .5rem; }
 .footer p { color: #b9cec5; margin: 0; font-size: .85rem; }
 .footer a { color: #dbe9e3; }
