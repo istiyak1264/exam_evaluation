@@ -47,7 +47,7 @@ function Layout({ children }) {
   const { user, signOut } = useAuth()
   return (
     <div className="shell">
-      <aside className="side">
+      <header className="topbar">
         <div className="brand">
           Script Eval
           <small>Examination office</small>
@@ -60,14 +60,12 @@ function Layout({ children }) {
           ))}
         </nav>
         <div className="who">
-          <div>{user?.full_name}</div>
-          <div className="mono" style={{ fontSize: '.7rem' }}>{user?.role.replace('_', ' ').toLowerCase()}</div>
-          <div className="row" style={{ marginTop: '.5rem' }}>
-            <NavLink to="/account" className="btn sm">Account</NavLink>
-            <button className="btn sm" onClick={() => void signOut()}>Sign out</button>
-          </div>
+          <span className="who-name">{user?.full_name}</span>
+          <span className="mono who-role">{user?.role.replace('_', ' ').toLowerCase()}</span>
+          <NavLink to="/account" className="btn sm">Account</NavLink>
+          <button className="btn sm" onClick={() => void signOut()}>Sign out</button>
         </div>
-      </aside>
+      </header>
       <main className="main">{children}</main>
     </div>
   )
