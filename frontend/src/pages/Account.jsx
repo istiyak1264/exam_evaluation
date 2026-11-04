@@ -7,10 +7,10 @@ export default function Account() {
   const { user } = useAuth()
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
-  const [msg, setMsg] = useState<string | null>(null)
-  const [err, setErr] = useState<string | null>(null)
+  const [msg, setMsg] = useState(null)
+  const [err, setErr] = useState(null)
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e) {
     e.preventDefault()
     setErr(null)
     setMsg(null)
@@ -20,7 +20,7 @@ export default function Account() {
       setCurrent('')
       setNext('')
     } catch (e2) {
-      setErr((e2 as Error).message)
+      setErr((e2).message)
     }
   }
 

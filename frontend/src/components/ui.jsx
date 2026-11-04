@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
-export function Badge({ status }: { status: string }) {
-  const map: Record<string, string> = {
+export function Badge({ status }) {
+  const map = {
     RESOLVED: 'ok', REGISTERED: '', ASSIGNED: 'info', EVAL_PENDING: 'warn',
     THIRD_REVIEW: 'warn', WITHDRAWN: 'danger', OPEN: 'warn', UPHELD: 'ok', DISMISSED: 'danger',
   }
@@ -9,24 +9,24 @@ export function Badge({ status }: { status: string }) {
   return <span className={`badge ${map[status] ?? ''}`}>{label}</span>
 }
 
-export function Grade({ grade }: { grade?: string | null }) {
+export function Grade({ grade }) {
   if (!grade) return <span className="mono">—</span>
   const cls = grade === 'F' ? 'danger' : grade === 'A' || grade === 'B' ? 'ok' : 'info'
   return <span className={`badge ${cls}`}>{grade}</span>
 }
 
-export function Note({ children, kind = 'warn' }: { children: ReactNode; kind?: 'warn' | 'info' | 'danger' }) {
+export function Note({ children, kind = 'warn' }) {
   return <div className={`note ${kind === 'warn' ? '' : kind}`}>{children}</div>
 }
 
-export function Empty({ children }: { children: ReactNode }) {
+export function Empty({ children }) {
   return <div className="card empty">{children}</div>
 }
 
 // useFetch runs a loader and exposes state; deps changes re-run.
-export function useFetch<T>(loader: () => Promise<T>, deps: unknown[] = []) {
-  const [data, setData] = useState<T | null>(null)
-  const [error, setError] = useState<string | null>(null)
+export function useFetch(loader, deps = []) {
+  const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [nonce, setNonce] = useState(0)
 
@@ -51,6 +51,6 @@ export function Loading() {
   return <div className="card empty">Loading…</div>
 }
 
-export function ErrorBox({ message }: { message: string }) {
+export function ErrorBox({ message }) {
   return <Note kind="danger">{message}</Note>
 }

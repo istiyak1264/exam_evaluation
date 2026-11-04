@@ -1,6 +1,5 @@
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
-import type { Role } from './api'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Scripts from './pages/Scripts'
@@ -15,14 +14,14 @@ import Catalog from './pages/Catalog'
 import Audit from './pages/Audit'
 import Account from './pages/Account'
 
-const home: Record<Role, string> = {
+const home = {
   ADMIN: '/dashboard',
   HALL_MANAGER: '/scripts',
   EVALUATOR: '/queue',
   STUDENT: '/me',
 }
 
-function Guard({ roles, children }: { roles: Role[]; children: JSX.Element }) {
+function Guard({ roles, children }) {
   const { user, loading } = useAuth()
   const loc = useLocation()
   if (loading) return <div className="main">Loading…</div>
@@ -31,7 +30,7 @@ function Guard({ roles, children }: { roles: Role[]; children: JSX.Element }) {
   return children
 }
 
-const links: { to: string; label: string; roles: Role[] }[] = [
+const links = [
   { to: '/dashboard', label: 'Dashboard', roles: ['ADMIN'] },
   { to: '/scripts', label: 'Scripts', roles: ['ADMIN', 'HALL_MANAGER'] },
   { to: '/scripts/new', label: 'Register script', roles: ['ADMIN', 'HALL_MANAGER'] },
@@ -44,7 +43,7 @@ const links: { to: string; label: string; roles: Role[] }[] = [
   { to: '/admin/audit', label: 'Audit trail', roles: ['ADMIN'] },
 ]
 
-function Layout({ children }: { children: JSX.Element }) {
+function Layout({ children }) {
   const { user, signOut } = useAuth()
   return (
     <div className="shell">

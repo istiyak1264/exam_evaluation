@@ -1,17 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { api, tokens, type User } from './api'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { api, tokens } from './api'
 
-interface AuthState {
-  user: User | null
-  loading: boolean
-  signIn: (email: string, password: string) => Promise<void>
-  signOut: () => Promise<void>
-}
 
-const AuthContext = createContext<AuthState | null>(null)
+const AuthContext = createContext(null)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,7 +16,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (email, password) => {
     const res = await api.login(email, password)
     tokens.set(res.access_token, res.refresh_token)
     setUser(res.user)

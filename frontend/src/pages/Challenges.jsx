@@ -6,17 +6,17 @@ import { Badge, Empty, Loading, Note, useFetch } from '../components/ui'
 export default function Challenges() {
   const [status, setStatus] = useState('OPEN')
   const { data, error, loading, reload } = useFetch(() => api.challenges(status), [status])
-  const [notes, setNotes] = useState<Record<string, string>>({})
-  const [msg, setMsg] = useState<string | null>(null)
+  const [notes, setNotes] = useState({})
+  const [msg, setMsg] = useState(null)
 
-  async function decide(id: string, decision: 'UPHELD' | 'DISMISSED') {
+  async function decide(id, decision) {
     setMsg(null)
     try {
       await api.decideChallenge(id, decision, notes[id] ?? '')
       setMsg(`Challenge ${decision.toLowerCase()}.`)
       reload()
     } catch (e) {
-      setMsg((e as Error).message)
+      setMsg((e).message)
     }
   }
 

@@ -5,12 +5,12 @@ import { Badge, Empty, Grade, Loading, Note, useFetch } from '../components/ui'
 
 export default function MyResults() {
   const { data, error, loading, reload } = useFetch(() => api.myResults(), [])
-  const [open, setOpen] = useState<string | null>(null)
+  const [open, setOpen] = useState(null)
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
+  const [msg, setMsg] = useState(null)
 
-  async function challenge(scriptId: string) {
+  async function challenge(scriptId) {
     setBusy(true)
     setMsg(null)
     try {
@@ -19,7 +19,7 @@ export default function MyResults() {
       setMsg('Challenge submitted. The examination board will review your script.')
       reload()
     } catch (e) {
-      setMsg((e as Error).message)
+      setMsg((e).message)
     } finally {
       setBusy(false)
     }

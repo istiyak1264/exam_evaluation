@@ -10,14 +10,15 @@ export default function Catalog() {
   const [sessionId, setSessionId] = useState('')
   const courses = useFetch(() => api.courses(sessionId), [sessionId])
   const students = useFetch(() => api.students('', sessionId), [sessionId])
-  const [msg, setMsg] = useState<string | null>(null)
+  const portalUsers = useFetch(() => api.users('STUDENT'), [])
+  const [msg, setMsg] = useState(null)
   const [sesForm, setSesForm] = useState({ name: '', code: '' })
   const [crsForm, setCrsForm] = useState({ code: '', title: '', max_marks: '100', pass_marks: '40' })
   const [stuForm, setStuForm] = useState({ student_no: '', full_name: '', email: '' })
 
-  async function run(fn: () => Promise<unknown>, note: string) {
+  async function run(fn, note) {
     setMsg(null)
-    try { await fn(); setMsg(note); sessions.reload(); courses.reload(); students.reload() } catch (e) { setMsg((e as Error).message) }
+    try { await fn(); setMsg(note); sessions.reload(); courses.reload(); students.reload() } catch (e) { setMsg((e).message) }
   }
 
   return (
@@ -103,7 +104,25 @@ export default function Catalog() {
             <thead><tr><th>Matriculation</th><th>Name</th><th>Session</th><th>Portal account</th></tr></thead>
             <tbody>
               {students.data.students.map((s) => (
-                <tr key={s.id}><td className="mono">{s.student_no}</td><td>{s.full_name}</td><td className="hint">{s.session}</td><td>{s.user_id ? <span className="badge ok">linked</span> : <span className="badge">none</span>}</td></tr>
+                <tr key={s.id}>
+                  <td className="mono">{s.student_no}</td><td>{s.full_name}</td><td className="hint">{s.session}</td>
+                  <td>
+                    {s.user_id ? <span className="badge ok">linked</span> : (
+                      <span className="row">
+                        <select
+                          defaultValue=""
+                          onChange={(e) => { if (e.target.value) void run(() => api.linkStudentUser(s.id, e.target.value), 'Portal account linked.') }}
+                          style={{ padding: '.35rem', border: '1px solid var(--line)', borderRadius: 6 }}
+                        >
+                          <option value="">link account…</option>
+                          {(portalUsers.data?.users ?? []).map((u) => (
+                            <option key={u.id} value={u.id}>{u.email}</option>
+                          ))}
+                        </select>
+                      </span>
+                    )}
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>

@@ -5,7 +5,7 @@ Scripts are registered under an opaque cover-sheet code, marked independently by
 examiners, and escalated to a third external examiner whenever their marks differ by
 **13 or more**. Below that gap the two marks are averaged.
 
-Go API · MySQL 8.4 · React/TypeScript · Docker · Terraform for AWS.
+Go API · MySQL 8.4 · React (plain JavaScript, no TypeScript) · Docker · Terraform for AWS.
 
 ---
 
@@ -143,6 +143,6 @@ backend/cmd/seed        demo cohort with generated PDFs
 backend/internal/api    handlers, middleware, routing
 backend/internal/store  SQL
 backend/internal/grading policy + tests
-frontend/src/pages      role-specific screens
+frontend/src/pages      role-specific screens (.jsx)
 infra/terraform         AWS infrastructure
 ```

@@ -1,16 +1,16 @@
 import { useState } from 'react'
-import { api, when, type Role } from '../api'
+import { api, when } from '../api'
 import { Empty, Loading, Note, useFetch } from '../components/ui'
 
-const ROLES: Role[] = ['ADMIN', 'HALL_MANAGER', 'EVALUATOR', 'STUDENT']
+const ROLES = ['ADMIN', 'HALL_MANAGER', 'EVALUATOR', 'STUDENT']
 
 export default function Users() {
   const [role, setRole] = useState('')
   const { data, error, loading, reload } = useFetch(() => api.users(role), [role])
-  const [form, setForm] = useState({ email: '', full_name: '', role: 'EVALUATOR' as Role, password: '' })
-  const [msg, setMsg] = useState<string | null>(null)
+  const [form, setForm] = useState({ email: '', full_name: '', role: 'EVALUATOR', password: '' })
+  const [msg, setMsg] = useState(null)
 
-  async function create(e: React.FormEvent) {
+  async function create(e) {
     e.preventDefault()
     setMsg(null)
     try {
@@ -19,12 +19,12 @@ export default function Users() {
       setForm({ email: '', full_name: '', role: 'EVALUATOR', password: '' })
       reload()
     } catch (err) {
-      setMsg((err as Error).message)
+      setMsg((err).message)
     }
   }
 
-  async function toggle(id: string, active: boolean) {
-    try { await api.patchUser(id, { is_active: active }); reload() } catch (e) { setMsg((e as Error).message) }
+  async function toggle(id, active) {
+    try { await api.patchUser(id, { is_active: active }); reload() } catch (e) { setMsg((e).message) }
   }
 
   return (
@@ -48,7 +48,7 @@ export default function Users() {
         <div className="field"><label>Email</label><input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
         <div className="field">
           <label>Role</label>
-          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
+          <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value})}>
             {ROLES.map((r) => <option key={r} value={r}>{r.replace('_', ' ').toLowerCase()}</option>)}
           </select>
         </div>

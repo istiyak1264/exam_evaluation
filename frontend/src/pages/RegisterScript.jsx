@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type Course, type Session, type Student } from '../api'
+import { api } from '../api'
 import { Note } from '../components/ui'
 
 export default function RegisterScript() {
-  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessions, setSessions] = useState([])
   const [sessionId, setSessionId] = useState('')
-  const [courses, setCourses] = useState<Course[]>([])
+  const [courses, setCourses] = useState([])
   const [courseId, setCourseId] = useState('')
   const [term, setTerm] = useState('')
-  const [students, setStudents] = useState<Student[]>([])
+  const [students, setStudents] = useState([])
   const [studentId, setStudentId] = useState('')
   const [code, setCode] = useState('')
-  const [file, setFile] = useState<File | null>(null)
+  const [file, setFile] = useState(null)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<{ id: string; code: string } | null>(null)
+  const [error, setError] = useState(null)
+  const [done, setDone] = useState(null)
 
   useEffect(() => {
     api.sessions().then((r) => {
@@ -37,7 +37,7 @@ export default function RegisterScript() {
     return () => clearTimeout(t)
   }, [term, sessionId])
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e) {
     e.preventDefault()
     setError(null)
     if (!courseId || !studentId || !file) {
@@ -57,7 +57,7 @@ export default function RegisterScript() {
       setCode('')
       setStudentId('')
     } catch (err) {
-      setError((err as Error).message)
+      setError((err).message)
     } finally {
       setBusy(false)
     }

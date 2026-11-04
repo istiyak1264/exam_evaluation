@@ -3,9 +3,9 @@ import { api } from '../api'
 import { ErrorBox, Loading } from './ui'
 
 // PdfPanel mints a short-lived URL, then embeds the script in the browser viewer.
-export function PdfPanel({ scriptId }: { scriptId: string }) {
-  const [url, setUrl] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+export function PdfPanel({ scriptId }) {
+  const [url, setUrl] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     let alive = true

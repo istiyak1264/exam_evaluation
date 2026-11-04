@@ -6,13 +6,13 @@ import { Note } from '../components/ui'
 export default function Login() {
   const { signIn } = useAuth()
   const nav = useNavigate()
-  const loc = useLocation() as { state?: { from?: string } }
+  const loc = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e) {
     e.preventDefault()
     setBusy(true)
     setError(null)
@@ -20,7 +20,7 @@ export default function Login() {
       await signIn(email.trim(), password)
       nav(loc.state?.from ?? '/', { replace: true })
     } catch (err) {
-      setError((err as Error).message)
+      setError((err).message)
     } finally {
       setBusy(false)
     }

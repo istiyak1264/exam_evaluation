@@ -38,14 +38,15 @@ func (s *Server) handleGetScript(w http.ResponseWriter, r *http.Request) {
 	u := userFrom(r.Context())
 	if u.Role == string(auth.RoleEvaluator) {
 		// Evaluators get the blinded projection: no student identity.
-		if _, err := s.DB.EvaluatorSlot(r.Context(), sc.ID, u.ID); err != nil {
+		slot, err := s.DB.EvaluatorSlot(r.Context(), sc.ID, u.ID)
+		if err != nil {
 			mapStoreErr(w, err)
 			return
 		}
 		out := map[string]any{
 			"id": sc.ID, "script_code": sc.Code, "status": sc.Status,
 			"course_code": sc.CourseCode, "course_title": sc.CourseTitle, "max_marks": sc.MaxMarks,
-			"page_count": sc.PageCount, "marks": sc.Marks, "final_marks": sc.FinalMarks,
+			"page_count": sc.PageCount, "marks": sc.Marks, "final_marks": sc.FinalMarks, "my_slot": slot, "method": sc.Method,
 		}
 		writeJSON(w, http.StatusOK, out)
 		return

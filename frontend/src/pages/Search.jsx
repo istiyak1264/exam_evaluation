@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, money, when, type ResultRow, type Session } from '../api'
+import { api, money, when } from '../api'
 import { Badge, Empty, Grade, Loading, Note } from '../components/ui'
 
 // Search retrieves marks by any of: name, matriculation number, session, script code.
@@ -8,14 +8,14 @@ export default function Search() {
   const [q, setQ] = useState('')
   const [sessionId, setSessionId] = useState('')
   const [status, setStatus] = useState('')
-  const [sessions, setSessions] = useState<Session[]>([])
-  const [rows, setRows] = useState<ResultRow[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [sessions, setSessions] = useState([])
+  const [rows, setRows] = useState(null)
+  const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => { api.sessions().then((r) => setSessions(r.sessions)).catch(() => undefined) }, [])
 
-  async function run(e: React.FormEvent) {
+  async function run(e) {
     e.preventDefault()
     setBusy(true)
     setError(null)
@@ -23,7 +23,7 @@ export default function Search() {
       const res = await api.results({ q, session_id: sessionId, status })
       setRows(res.results)
     } catch (err) {
-      setError((err as Error).message)
+      setError((err).message)
     } finally {
       setBusy(false)
     }

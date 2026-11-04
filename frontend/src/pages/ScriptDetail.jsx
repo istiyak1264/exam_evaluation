@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { api, money, when, type BlindScript, type Script, type User } from '../api'
+import { api, money, when } from '../api'
 import { useAuth } from '../auth'
 import { PdfPanel } from '../components/PdfPanel'
 import { Badge, Grade, Loading, Note } from '../components/ui'
@@ -9,11 +9,11 @@ export default function ScriptDetail() {
   const { id = '' } = useParams()
   const { user } = useAuth()
   const isEvaluator = user?.role === 'EVALUATOR'
-  const [script, setScript] = useState<Script | null>(null)
-  const [blind, setBlind] = useState<BlindScript | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [script, setScript] = useState(null)
+  const [blind, setBlind] = useState(null)
+  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [evaluators, setEvaluators] = useState<User[]>([])
+  const [evaluators, setEvaluators] = useState([])
   const [first, setFirst] = useState('')
   const [second, setSecond] = useState('')
   const [third, setThird] = useState('')
@@ -21,17 +21,17 @@ export default function ScriptDetail() {
   const [comment, setComment] = useState('')
   const [overrideScore, setOverrideScore] = useState('')
   const [overrideNote, setOverrideNote] = useState('')
-  const [msg, setMsg] = useState<string | null>(null)
+  const [msg, setMsg] = useState(null)
 
   async function load() {
     setLoading(true)
     setError(null)
     try {
       const res = await api.script(id)
-      if (isEvaluator) setBlind(res as BlindScript)
-      else setScript(res as Script)
+      if (isEvaluator) setBlind(res)
+      else setScript(res)
     } catch (e) {
-      setError((e as Error).message)
+      setError((e).message)
     } finally {
       setLoading(false)
     }
@@ -44,7 +44,7 @@ export default function ScriptDetail() {
     api.users('EVALUATOR').then((r) => setEvaluators(r.users)).catch(() => setEvaluators([]))
   }, [isEvaluator])
 
-  async function act(fn: () => Promise<unknown>, note: string) {
+  async function act(fn, note) {
     setError(null)
     setMsg(null)
     try {
@@ -52,7 +52,7 @@ export default function ScriptDetail() {
       setMsg(note)
       await load()
     } catch (e) {
-      setError((e as Error).message)
+      setError((e).message)
     }
   }
 

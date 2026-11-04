@@ -39,7 +39,6 @@ test: test-unit test-api ## Everything
 
 fmt:
 	cd backend && gofmt -w ./cmd ./internal
-	cd frontend && npx tsc --noEmit
 
 vet:
 	cd backend && go vet ./...
