@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { AuthShell } from '../components/AuthShell'
 import { ErrorSummary } from '../components/gov'
+import PasswordField from '../components/PasswordField'
 
 const ROLES = [
   { value: 'STUDENT', label: 'Student', hint: 'See your own scripts and results.' },
@@ -64,11 +65,16 @@ export default function Signup() {
           <label htmlFor="email">Email</label>
           <input id="email" type="email" required autoComplete="username" value={form.email} onChange={set('email')} />
         </div>
-        <div className="field">
-          <label htmlFor="password">Password</label>
-          <span className="hint" id="pw-hint">At least 10 characters.</span>
-          <input id="password" type="password" required minLength={10} autoComplete="new-password" aria-describedby="pw-hint" value={form.password} onChange={set('password')} />
-        </div>
+        <PasswordField
+          id="password"
+          label="Password"
+          hint="At least 10 characters."
+          hintId="pw-hint"
+          autoComplete="new-password"
+          minLength={10}
+          value={form.password}
+          onChange={set('password')}
+        />
 
         {form.role === 'STUDENT' && (
           <div className="field">

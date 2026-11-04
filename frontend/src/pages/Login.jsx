@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { AuthShell } from '../components/AuthShell'
 import { ErrorSummary } from '../components/gov'
+import PasswordField from '../components/PasswordField'
 
 export default function Login() {
   const { signIn } = useAuth()
@@ -39,10 +40,7 @@ export default function Login() {
           <label htmlFor="email">Email</label>
           <input id="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
-        <div className="field">
-          <label htmlFor="password">Password</label>
-          <input id="password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-        </div>
+        <PasswordField id="password" label="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <button className="btn primary" style={{ width: '100%' }} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
       </form>
     </AuthShell>
