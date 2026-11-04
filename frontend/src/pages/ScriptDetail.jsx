@@ -116,7 +116,7 @@ export default function ScriptDetail() {
               <div className="row spread" style={{ borderTop: '1px solid var(--line)', paddingTop: '.6rem' }}>
                 <div>
                   <strong>Final marks</strong>
-                  <div className="hint">{script?.method?.replace(/_/g, ' ').toLowerCase() ?? 'board'}</div>
+                  <div className="hint">{(script?.method ?? blind?.method)?.replace(/_/g, ' ').toLowerCase() ?? 'board'}</div>
                 </div>
                 <strong className="mono" style={{ fontSize: '1.2rem' }}>{money(final)}</strong>
               </div>
