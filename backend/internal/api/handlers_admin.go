@@ -76,10 +76,11 @@ func (s *Server) handleListStudents(w http.ResponseWriter, r *http.Request) {
 }
 
 type studentReq struct {
-	StudentNo string `json:"student_no"`
-	FullName  string `json:"full_name"`
-	Email     string `json:"email"`
-	SessionID string `json:"session_id"`
+	StudentNo      string `json:"student_no"`
+	RegistrationNo string `json:"registration_no"`
+	FullName       string `json:"full_name"`
+	Email          string `json:"email"`
+	SessionID      string `json:"session_id"`
 }
 
 func (s *Server) handleCreateStudent(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +96,7 @@ func (s *Server) handleCreateStudent(w http.ResponseWriter, r *http.Request) {
 	if e := strings.TrimSpace(req.Email); e != "" {
 		email = &e
 	}
-	m, err := s.DB.CreateStudent(r.Context(), strings.TrimSpace(req.StudentNo), strings.TrimSpace(req.FullName), email, req.SessionID)
+	m, err := s.DB.CreateStudent(r.Context(), strings.TrimSpace(req.StudentNo), strings.TrimSpace(req.RegistrationNo), strings.TrimSpace(req.FullName), email, req.SessionID)
 	if err != nil {
 		mapStoreErr(w, err)
 		return

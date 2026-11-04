@@ -14,7 +14,7 @@ export default function Catalog() {
   const [msg, setMsg] = useState(null)
   const [sesForm, setSesForm] = useState({ name: '', code: '' })
   const [crsForm, setCrsForm] = useState({ code: '', title: '', max_marks: '100', pass_marks: '40' })
-  const [stuForm, setStuForm] = useState({ student_no: '', full_name: '', email: '' })
+  const [stuForm, setStuForm] = useState({ student_no: '', registration_no: '', full_name: '', email: '' })
 
   async function run(fn, note) {
     setMsg(null)
@@ -93,7 +93,8 @@ export default function Catalog() {
           if (!sessionId) { setMsg('Pick a session first.'); return }
           void run(() => api.createStudent({ ...stuForm, session_id: sessionId }), 'Student added.')
         }}>
-          <input required placeholder="Matriculation no" value={stuForm.student_no} onChange={(e) => setStuForm({ ...stuForm, student_no: e.target.value })} style={{ padding: '.5rem', border: '1px solid var(--line)', borderRadius: 8 }} />
+          <input required placeholder="Student ID" value={stuForm.student_no} onChange={(e) => setStuForm({ ...stuForm, student_no: e.target.value })} style={{ padding: '.5rem', border: '1px solid var(--line)', borderRadius: 8 }} />
+          <input required placeholder="Registration no" value={stuForm.registration_no} onChange={(e) => setStuForm({ ...stuForm, registration_no: e.target.value })} style={{ padding: '.5rem', border: '1px solid var(--line)', borderRadius: 8 }} />
           <input required placeholder="Full name" value={stuForm.full_name} onChange={(e) => setStuForm({ ...stuForm, full_name: e.target.value })} style={{ padding: '.5rem', border: '1px solid var(--line)', borderRadius: 8, flex: 1 }} />
           <input placeholder="Email (optional)" value={stuForm.email} onChange={(e) => setStuForm({ ...stuForm, email: e.target.value })} style={{ padding: '.5rem', border: '1px solid var(--line)', borderRadius: 8 }} />
           <button className="btn primary">Add student</button>
@@ -101,11 +102,11 @@ export default function Catalog() {
         {students.data?.students.length === 0 && <Empty>No students.</Empty>}
         {students.data && students.data.students.length > 0 && (
           <table>
-            <thead><tr><th>Matriculation</th><th>Name</th><th>Session</th><th>Portal account</th></tr></thead>
+            <thead><tr><th>Student ID</th><th>Registration</th><th>Name</th><th>Session</th><th>Portal account</th></tr></thead>
             <tbody>
               {students.data.students.map((s) => (
                 <tr key={s.id}>
-                  <td className="mono">{s.student_no}</td><td>{s.full_name}</td><td className="hint">{s.session}</td>
+                  <td className="mono">{s.student_no}</td><td className="mono">{s.registration_no ?? '—'}</td><td>{s.full_name}</td><td className="hint">{s.session}</td>
                   <td>
                     {s.user_id ? <span className="badge ok">linked</span> : (
                       <span className="row">

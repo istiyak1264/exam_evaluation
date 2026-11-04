@@ -73,19 +73,19 @@ func main() {
 	}
 
 	roster := []struct {
-		no, name, email string
-		m1, m2          float64
-		third           float64
+		no, reg, name, email string
+		m1, m2               float64
+		third                float64
 	}{
-		{"MAT/2026/0101", "Adaeze Nwosu", "adaeze@student.test", 62, 68, 0},
-		{"MAT/2026/0102", "Ibrahim Sule", "ibrahim@student.test", 41, 58, 61},
-		{"MAT/2026/0103", "Chen Wei", "chen@student.test", 55, 72, 70},
-		{"MAT/2026/0104", "Fatima Zahra", "fatima@student.test", 38, 79, 64},
-		{"MAT/2026/0105", "Kwame Mensah", "kwame@student.test", 71, 52, 58},
+		{"MAT/2026/0101", "REG-2026-0101", "Adaeze Nwosu", "adaeze@student.test", 62, 68, 0},
+		{"MAT/2026/0102", "REG-2026-0102", "Ibrahim Sule", "ibrahim@student.test", 41, 58, 61},
+		{"MAT/2026/0103", "REG-2026-0103", "Chen Wei", "chen@student.test", 55, 72, 70},
+		{"MAT/2026/0104", "REG-2026-0104", "Fatima Zahra", "fatima@student.test", 38, 79, 64},
+		{"MAT/2026/0105", "REG-2026-0105", "Kwame Mensah", "kwame@student.test", 71, 52, 58},
 	}
 
 	for i, r := range roster {
-		stu, su, err := ensureStudent(ctx, st, r.no, r.name, r.email, ses, pw)
+		stu, su, err := ensureStudent(ctx, st, r.no, r.reg, r.name, r.email, ses, pw)
 		if err != nil {
 			log.Fatalf("%s: %v", r.name, err)
 		}
@@ -180,7 +180,7 @@ func ensureCourse(ctx context.Context, st *store.Store, ses, instructor string) 
 	return c.ID, nil
 }
 
-func ensureStudent(ctx context.Context, st *store.Store, no, name, email, ses, pw string) (string, string, error) {
+func ensureStudent(ctx context.Context, st *store.Store, no, reg, name, email, ses, pw string) (string, string, error) {
 	rows, _ := st.ListStudents(ctx, no, ses)
 	if len(rows) > 0 {
 		return rows[0].ID, "", nil
@@ -193,7 +193,7 @@ func ensureStudent(ctx context.Context, st *store.Store, no, name, email, ses, p
 	if err != nil {
 		return "", "", err
 	}
-	s, err := st.CreateStudent(ctx, no, name, &email, ses)
+	s, err := st.CreateStudent(ctx, no, reg, name, &email, ses)
 	if err != nil {
 		return "", "", err
 	}

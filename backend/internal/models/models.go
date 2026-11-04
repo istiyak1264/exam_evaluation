@@ -21,14 +21,15 @@ type Session struct {
 }
 
 type Student struct {
-	ID        string    `json:"id"`
-	StudentNo string    `json:"student_no"`
-	FullName  string    `json:"full_name"`
-	Email     *string   `json:"email,omitempty"`
-	SessionID string    `json:"session_id"`
-	Session   string    `json:"session,omitempty"`
-	UserID    *string   `json:"user_id,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	ID             string    `json:"id"`
+	StudentNo      string    `json:"student_no"`
+	RegistrationNo *string   `json:"registration_no,omitempty"`
+	FullName       string    `json:"full_name"`
+	Email          *string   `json:"email,omitempty"`
+	SessionID      string    `json:"session_id"`
+	Session        string    `json:"session,omitempty"`
+	UserID         *string   `json:"user_id,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type Course struct {

@@ -73,6 +73,7 @@ type registerReq struct {
 	Password  string `json:"password"`
 	Role      string `json:"role"`
 	StudentNo string `json:"student_no"`
+	RegNo     string `json:"registration_no"`
 }
 
 // handleRegister is the public sign-up. Only candidates and examiners may
@@ -86,9 +87,14 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	req.FullName = strings.TrimSpace(req.FullName)
 	req.Role = strings.ToUpper(strings.TrimSpace(req.Role))
 	req.StudentNo = strings.TrimSpace(req.StudentNo)
+	req.RegNo = strings.TrimSpace(req.RegNo)
 
 	if req.Role != string(auth.RoleStudent) && req.Role != string(auth.RoleEvaluator) {
 		writeErr(w, http.StatusUnprocessableEntity, "role must be STUDENT or EVALUATOR")
+		return
+	}
+	if req.Role == string(auth.RoleStudent) && (req.StudentNo == "" || req.RegNo == "") {
+		writeErr(w, http.StatusUnprocessableEntity, "student ID and registration number are required")
 		return
 	}
 	if !strings.Contains(req.Email, "@") || len(req.FullName) < 3 {
@@ -100,6 +106,19 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusTooManyRequests, "too many attempts, wait a minute")
 		return
 	}
+	// Resolve the candidate record first, so a mismatch never leaves an
+	// orphaned account behind.
+	var candidate *models.Student
+	if req.Role == string(auth.RoleStudent) {
+		st, err := s.DB.UnclaimedStudent(r.Context(), req.StudentNo, req.RegNo)
+		if err != nil {
+			writeErr(w, http.StatusUnprocessableEntity,
+				"no unclaimed student record matches that student ID and registration number")
+			return
+		}
+		candidate = st
+	}
+
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
 		writeErr(w, http.StatusUnprocessableEntity, err.Error())
@@ -107,22 +126,43 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 	u, err := s.DB.CreateUser(r.Context(), req.Email, hash, req.FullName, req.Role)
 	if err != nil {
-		if errors.Is(err, store.ErrConflict) {
+		if !errors.Is(err, store.ErrConflict) {
+			mapStoreErr(w, err)
+			return
+		}
+		// An earlier failed attempt may have left a disabled, unlinked account
+		// behind — reclaim it rather than blocking the address forever.
+		existing, gerr := s.DB.UserByEmail(r.Context(), req.Email)
+		if gerr != nil || existing.IsActive || existing.Role != req.Role {
 			writeErr(w, http.StatusConflict, "an account with that email already exists")
 			return
 		}
-		mapStoreErr(w, err)
-		return
+		if _, lerr := s.DB.StudentByUserID(r.Context(), existing.ID); lerr == nil {
+			writeErr(w, http.StatusConflict, "an account with that email already exists")
+			return
+		}
+		if perr := s.DB.SetPassword(r.Context(), existing.ID, hash); perr != nil {
+			mapStoreErr(w, perr)
+			return
+		}
+		if aerr := s.DB.SetUserActive(r.Context(), existing.ID, true); aerr != nil {
+			mapStoreErr(w, aerr)
+			return
+		}
+		u = &existing.User
 	}
 
 	// A candidate who gives their matriculation number is linked to the
 	// record the office already holds, so their scripts appear immediately.
 	linked := false
-	if req.Role == string(auth.RoleStudent) && req.StudentNo != "" {
-		if st, err := s.DB.UnclaimedStudent(r.Context(), req.StudentNo); err == nil {
-			if ok, err := s.DB.ClaimStudent(r.Context(), st.ID, u.ID); err == nil && ok {
-				linked = true
-			}
+	if candidate != nil {
+		if ok, err := s.DB.ClaimStudent(r.Context(), candidate.ID, u.ID); err == nil && ok {
+			linked = true
+		} else if err == nil {
+			// Lost a race between lookup and claim: roll the account back.
+			_ = s.DB.SetUserActive(r.Context(), u.ID, false)
+			writeErr(w, http.StatusConflict, "that student record was claimed by another sign-up")
+			return
 		}
 	}
 	s.DB.Audit(r.Context(), u.ID, u.Role, "SIGNED_UP", "user", u.ID, map[string]any{"linked_student": linked})

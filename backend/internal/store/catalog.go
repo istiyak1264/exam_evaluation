@@ -56,21 +56,25 @@ func (s *Store) SetSessionActive(ctx context.Context, id string, active bool) er
 
 // ---------- students ----------
 
-func (s *Store) CreateStudent(ctx context.Context, no, name string, email *string, sessionID string) (*models.Student, error) {
+func (s *Store) CreateStudent(ctx context.Context, no, registration, name string, email *string, sessionID string) (*models.Student, error) {
 	id := newID()
+	var reg any
+	if registration != "" {
+		reg = registration
+	}
 	if _, err := s.DB.ExecContext(ctx, `
-		INSERT INTO students (id, student_no, full_name, email, session_id) VALUES (?,?,?,?,?)`,
-		id, no, name, email, sessionID); err != nil {
+		INSERT INTO students (id, student_no, registration_no, full_name, email, session_id) VALUES (?,?,?,?,?,?)`,
+		id, no, reg, name, email, sessionID); err != nil {
 		return nil, mapErr(err)
 	}
 	return s.StudentByID(ctx, id)
 }
 
-const studentCols = `st.id, st.student_no, st.full_name, st.email, st.session_id, ses.name, st.user_id, st.created_at`
+const studentCols = `st.id, st.student_no, st.registration_no, st.full_name, st.email, st.session_id, ses.name, st.user_id, st.created_at`
 
 func scanStudent(row *sql.Row) (*models.Student, error) {
 	var m models.Student
-	err := row.Scan(&m.ID, &m.StudentNo, &m.FullName, &m.Email, &m.SessionID, &m.Session, &m.UserID, &m.CreatedAt)
+	err := row.Scan(&m.ID, &m.StudentNo, &m.RegistrationNo, &m.FullName, &m.Email, &m.SessionID, &m.Session, &m.UserID, &m.CreatedAt)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -91,7 +95,7 @@ func (s *Store) ListStudents(ctx context.Context, q, sessionID string) ([]models
 	out := []models.Student{}
 	for rows.Next() {
 		var m models.Student
-		if err := rows.Scan(&m.ID, &m.StudentNo, &m.FullName, &m.Email, &m.SessionID, &m.Session, &m.UserID, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.StudentNo, &m.RegistrationNo, &m.FullName, &m.Email, &m.SessionID, &m.Session, &m.UserID, &m.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, m)
@@ -170,13 +174,15 @@ func (s *Store) CourseByID(ctx context.Context, id string) (*models.Course, erro
 	return &m, nil
 }
 
-// UnclaimedStudent looks a candidate up by matriculation number for sign-up
-// linking. Returns ErrNotFound when the record does not exist or is taken.
-func (s *Store) UnclaimedStudent(ctx context.Context, studentNo string) (*models.Student, error) {
+// UnclaimedStudent matches a student ID against a registration number for
+// sign-up linking. Mismatched pairs and already-claimed records return
+// ErrNotFound.
+func (s *Store) UnclaimedStudent(ctx context.Context, studentNo, registrationNo string) (*models.Student, error) {
 	return scanStudent(s.DB.QueryRowContext(ctx, `
 		SELECT `+studentCols+` FROM students st
 		JOIN academic_sessions ses ON ses.id = st.session_id
-		WHERE st.student_no = ? AND st.user_id IS NULL`, studentNo))
+		WHERE st.student_no = ? AND st.registration_no = ? AND st.user_id IS NULL`,
+		studentNo, registrationNo))
 }
 
 // ClaimStudent links a portal account only if the record is still unclaimed.

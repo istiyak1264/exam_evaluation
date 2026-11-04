@@ -138,7 +138,8 @@ func (h *harness) fixtures(sessionToken string) (studentID, courseID string) {
 	ses := body["id"].(string)
 
 	stBody, b1 := h.do("POST", "/api/students", sessionToken, map[string]any{
-		"student_no": "MAT" + h.sfx, "full_name": "Ada Lovelace " + h.sfx, "session_id": ses})
+		"student_no": "MAT" + h.sfx, "registration_no": "REG" + h.sfx,
+		"full_name": "Ada Lovelace " + h.sfx, "session_id": ses})
 	if st != 201 {
 		h.t.Fatalf("student: %d %v", stBody, b1)
 	}
@@ -286,7 +287,8 @@ func TestFullMarkingWorkflow(t *testing.T) {
 	// --- wide-gap script: third review, on a second student of the same course
 	stu2User, stu2Tok := h.user(auth.RoleStudent)
 	stu2Resp, stu2Body := h.do("POST", "/api/students", adminTok, map[string]any{
-		"student_no": "MAT2" + h.sfx, "full_name": "Grace Hopper " + h.sfx, "session_id": bodySessionID(t, h, adminTok)})
+		"student_no": "MAT2" + h.sfx, "registration_no": "REG2" + h.sfx,
+		"full_name": "Grace Hopper " + h.sfx, "session_id": bodySessionID(t, h, adminTok)})
 	if stu2Resp != 201 {
 		t.Fatalf("student 2: %d %v", stu2Resp, stu2Body)
 	}
@@ -470,24 +472,38 @@ func TestSelfSignUp(t *testing.T) {
 	}
 	// Duplicate email is refused.
 	if st, _ := h.do("POST", "/api/auth/register", "", map[string]any{
-		"full_name": "Dup", "email": "new.examiner@uni.test", "password": "longpassword1", "role": "STUDENT"}); st != 409 {
+		"full_name": "Dup", "email": "new.examiner@uni.test", "password": "longpassword1", "role": "EVALUATOR"}); st != 409 {
 		t.Fatalf("duplicate signup: %d", st)
 	}
 	// Weak password is refused.
 	if st, _ := h.do("POST", "/api/auth/register", "", map[string]any{
-		"full_name": "Short Pw", "email": "short@uni.test", "password": "abc", "role": "STUDENT"}); st != 422 {
+		"full_name": "Short Pw", "email": "short@uni.test", "password": "abc", "role": "EVALUATOR"}); st != 422 {
 		t.Fatalf("short password: %d", st)
 	}
 
 	// A student who knows their matriculation number is linked to the record.
 	_, adminTok := h.user(auth.RoleAdmin)
 	studentID, _ := h.fixtures(adminTok)
-	var no string
-	if err := h.db.QueryRowContext(context.Background(), `SELECT student_no FROM students WHERE id = ?`, studentID).Scan(&no); err != nil {
+	var no, reg string
+	if err := h.db.QueryRowContext(context.Background(),
+		`SELECT student_no, registration_no FROM students WHERE id = ?`, studentID).Scan(&no, &reg); err != nil {
 		t.Fatal(err)
 	}
+	// Missing identifiers are refused.
+	if st, _ := h.do("POST", "/api/auth/register", "", map[string]any{
+		"full_name": "No Id", "email": "noid@uni.test", "password": "longpassword1", "role": "STUDENT"}); st != 422 {
+		t.Fatalf("student signup without identifiers: %d", st)
+	}
+	// A wrong registration number does not link, and leaves no account behind
+	// (the same email can be retried immediately).
+	if st, _ := h.do("POST", "/api/auth/register", "", map[string]any{
+		"full_name": "Ada Selfserve", "email": "selfserve@uni.test", "password": "longpassword1",
+		"role": "STUDENT", "student_no": no, "registration_no": "REG-NOPE"}); st != 422 {
+		t.Fatalf("mismatched registration accepted: %d", st)
+	}
 	st, body = h.do("POST", "/api/auth/register", "", map[string]any{
-		"full_name": "Ada Selfserve", "email": "selfserve@uni.test", "password": "longpassword1", "role": "STUDENT", "student_no": no})
+		"full_name": "Ada Selfserve", "email": "selfserve@uni.test", "password": "longpassword1",
+		"role": "STUDENT", "student_no": no, "registration_no": reg})
 	if st != 200 {
 		t.Fatalf("student signup: %d %v", st, body)
 	}

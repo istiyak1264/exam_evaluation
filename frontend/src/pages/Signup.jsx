@@ -13,7 +13,7 @@ const ROLES = [
 export default function Signup() {
   const { signUp } = useAuth()
   const nav = useNavigate()
-  const [form, setForm] = useState({ full_name: '', email: '', password: '', role: 'STUDENT', student_no: '' })
+  const [form, setForm] = useState({ full_name: '', email: '', password: '', role: 'STUDENT', student_no: '', registration_no: '' })
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
@@ -77,11 +77,18 @@ export default function Signup() {
         />
 
         {form.role === 'STUDENT' && (
-          <div className="field">
-            <label htmlFor="student_no">Matriculation number <span className="hint">(optional)</span></label>
-            <span className="hint" id="no-hint">If the board already holds your record, this links it so your scripts appear straight away.</span>
-            <input id="student_no" aria-describedby="no-hint" value={form.student_no} onChange={set('student_no')} placeholder="e.g. MAT/2026/0101" />
-          </div>
+          <>
+            <div className="field">
+              <label htmlFor="student_no">Student ID</label>
+              <span className="hint" id="no-hint">Your matriculation number as printed on your identity card.</span>
+              <input id="student_no" required aria-describedby="no-hint" value={form.student_no} onChange={set('student_no')} placeholder="e.g. MAT/2026/0101" />
+            </div>
+            <div className="field">
+              <label htmlFor="registration_no">Registration number</label>
+              <span className="hint" id="reg-hint">Issued by the examination office. Both values must match the record held for you.</span>
+              <input id="registration_no" required aria-describedby="reg-hint" value={form.registration_no} onChange={set('registration_no')} placeholder="e.g. REG-2026-0101" />
+            </div>
+          </>
         )}
 
         <button className="btn primary" style={{ width: '100%' }} disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button>
