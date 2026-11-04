@@ -195,7 +195,7 @@ type createUserReq struct {
 
 func validRole(r string) bool {
 	switch auth.Role(r) {
-	case auth.RoleAdmin, auth.RoleHallManager, auth.RoleEvaluator, auth.RoleStudent:
+	case auth.RoleAdmin, auth.RoleEvaluator, auth.RoleStudent:
 		return true
 	}
 	return false
@@ -208,7 +208,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Role = strings.ToUpper(strings.TrimSpace(req.Role))
 	if !validRole(req.Role) {
-		writeErr(w, http.StatusUnprocessableEntity, "role must be ADMIN, HALL_MANAGER, EVALUATOR or STUDENT")
+		writeErr(w, http.StatusUnprocessableEntity, "role must be ADMIN, EVALUATOR or STUDENT")
 		return
 	}
 	if !strings.Contains(req.Email, "@") || req.FullName == "" {

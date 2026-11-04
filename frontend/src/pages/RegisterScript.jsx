@@ -71,8 +71,8 @@ export default function RegisterScript() {
         <div>
           <h1>Register a script</h1>
           <p>
-            The PDF must already have the student's name and number removed. The office records the link between the
-            cover-sheet code and the student here; examiners only ever see the code.
+            The PDF must already have the student's name and number removed. You record the link between the cover-sheet
+            code and the student here; examiners only ever see the code.
           </p>
         </div>
         <Link className="btn" to="/scripts">Back to scripts</Link>

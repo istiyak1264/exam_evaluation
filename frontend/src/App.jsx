@@ -17,7 +17,6 @@ import Account from './pages/Account'
 
 const home = {
   ADMIN: '/dashboard',
-  HALL_MANAGER: '/scripts',
   EVALUATOR: '/queue',
   STUDENT: '/me',
 }
@@ -33,14 +32,14 @@ function Guard({ roles, children }) {
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', roles: ['ADMIN'] },
-  { to: '/scripts', label: 'Scripts', roles: ['ADMIN', 'HALL_MANAGER'] },
-  { to: '/scripts/new', label: 'Register script', roles: ['ADMIN', 'HALL_MANAGER'] },
-  { to: '/search', label: 'Find results', roles: ['ADMIN', 'HALL_MANAGER', 'EVALUATOR'] },
-  { to: '/challenges', label: 'Challenges', roles: ['ADMIN', 'HALL_MANAGER'] },
+  { to: '/scripts', label: 'Scripts', roles: ['ADMIN'] },
+  { to: '/scripts/new', label: 'Register script', roles: ['ADMIN'] },
+  { to: '/search', label: 'Find results', roles: ['ADMIN', 'EVALUATOR'] },
+  { to: '/challenges', label: 'Challenges', roles: ['ADMIN'] },
   { to: '/queue', label: 'My marking', roles: ['EVALUATOR'] },
   { to: '/me', label: 'My results', roles: ['STUDENT'] },
   { to: '/admin/users', label: 'People', roles: ['ADMIN'] },
-  { to: '/admin/catalog', label: 'Sessions & courses', roles: ['ADMIN', 'HALL_MANAGER'] },
+  { to: '/admin/catalog', label: 'Sessions & courses', roles: ['ADMIN'] },
   { to: '/admin/audit', label: 'Audit trail', roles: ['ADMIN'] },
 ]
 
@@ -122,20 +121,20 @@ export default function App() {
       <Route
         path="*"
         element={
-          <Guard roles={['ADMIN', 'HALL_MANAGER', 'EVALUATOR', 'STUDENT']}>
+          <Guard roles={['ADMIN', 'EVALUATOR', 'STUDENT']}>
             <Layout>
               <Routes>
                 <Route path="/" element={<Navigate to={user ? home[user.role] : '/login'} replace />} />
                 <Route path="/dashboard" element={<Guard roles={['ADMIN']}><Dashboard /></Guard>} />
-                <Route path="/scripts" element={<Guard roles={['ADMIN', 'HALL_MANAGER']}><Scripts /></Guard>} />
-                <Route path="/scripts/new" element={<Guard roles={['ADMIN', 'HALL_MANAGER']}><RegisterScript /></Guard>} />
-                <Route path="/scripts/:id" element={<Guard roles={['ADMIN', 'HALL_MANAGER', 'EVALUATOR']}><ScriptDetail /></Guard>} />
+                <Route path="/scripts" element={<Guard roles={['ADMIN']}><Scripts /></Guard>} />
+                <Route path="/scripts/new" element={<Guard roles={['ADMIN']}><RegisterScript /></Guard>} />
+                <Route path="/scripts/:id" element={<Guard roles={['ADMIN', 'EVALUATOR']}><ScriptDetail /></Guard>} />
                 <Route path="/queue" element={<Guard roles={['EVALUATOR']}><Queue /></Guard>} />
-                <Route path="/search" element={<Guard roles={['ADMIN', 'HALL_MANAGER', 'EVALUATOR']}><Search /></Guard>} />
+                <Route path="/search" element={<Guard roles={['ADMIN', 'EVALUATOR']}><Search /></Guard>} />
                 <Route path="/me" element={<Guard roles={['STUDENT']}><MyResults /></Guard>} />
-                <Route path="/challenges" element={<Guard roles={['ADMIN', 'HALL_MANAGER']}><Challenges /></Guard>} />
+                <Route path="/challenges" element={<Guard roles={['ADMIN']}><Challenges /></Guard>} />
                 <Route path="/admin/users" element={<Guard roles={['ADMIN']}><Users /></Guard>} />
-                <Route path="/admin/catalog" element={<Guard roles={['ADMIN', 'HALL_MANAGER']}><Catalog /></Guard>} />
+                <Route path="/admin/catalog" element={<Guard roles={['ADMIN']}><Catalog /></Guard>} />
                 <Route path="/admin/audit" element={<Guard roles={['ADMIN']}><Audit /></Guard>} />
                 <Route path="/account" element={<Account />} />
                 <Route path="*" element={<Navigate to={user ? home[user.role] : '/login'} replace />} />

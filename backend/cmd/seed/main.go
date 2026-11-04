@@ -49,7 +49,7 @@ func main() {
 	}
 
 	people := []person{
-		{"registrar@uni.test", "Bilkis Rahman", "HALL_MANAGER"},
+		{"registrar@uni.test", "Bilkis Rahman", "ADMIN"},
 		{"examiner.one@uni.test", "Dr. Tariq Hossain", "EVALUATOR"},
 		{"examiner.two@uni.test", "Dr. Priya Nair", "EVALUATOR"},
 		{"examiner.three@uni.test", "Prof. Samuel Okoro", "EVALUATOR"},

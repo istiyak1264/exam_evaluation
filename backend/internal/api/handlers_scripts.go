@@ -372,7 +372,7 @@ func (s *Server) handlePDF(w http.ResponseWriter, r *http.Request) {
 func (s *Server) authorizePDF(r *http.Request, scriptID string) error {
 	u := userFrom(r.Context())
 	switch auth.Role(u.Role) {
-	case auth.RoleAdmin, auth.RoleHallManager:
+	case auth.RoleAdmin:
 		_, _, err := s.DB.ScriptPDFKey(r.Context(), scriptID)
 		return err
 	case auth.RoleEvaluator:

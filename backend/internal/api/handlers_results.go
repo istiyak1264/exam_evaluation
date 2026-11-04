@@ -31,6 +31,21 @@ func (s *Server) handleMyResults(w http.ResponseWriter, r *http.Request) {
 		mapStoreErr(w, err)
 		return
 	}
+	// Marks stay hidden until the board upholds a challenge on that script.
+	for i := range rows {
+		upheld := rows[i].Challenge != nil && *rows[i].Challenge == "UPHELD"
+		rows[i].Revealed = upheld
+		if !upheld {
+			rows[i].FinalMarks, rows[i].Grade, rows[i].Passed = nil, nil, nil
+			continue
+		}
+		marks, err := s.DB.MarksForScript(r.Context(), rows[i].ScriptID)
+		if err != nil {
+			mapStoreErr(w, err)
+			return
+		}
+		rows[i].Marks = marks
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"results": rows, "student": st})
 }
 

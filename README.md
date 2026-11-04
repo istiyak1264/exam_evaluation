@@ -27,10 +27,13 @@ review. A single submission leaves the script pending; four marks are rejected.
 
 | Role | Can do |
 |---|---|
-| `ADMIN` | everything, plus users, stats, audit, board override |
-| `HALL_MANAGER` | register scripts + PDFs, record the code↔student link, appoint examiners, search |
-| `EVALUATOR` | see only assigned scripts, blinded; one mark per slot, no editing after submit |
-| `STUDENT` | own results, own PDF, one challenge per script |
+| `ADMIN` | everything: register scripts + PDFs, record the code↔student link, appoint examiners, users, audit, board override, adjudicate challenges |
+| `EVALUATOR` | only the scripts assigned to them, blinded; one mark per slot, no editing after submit |
+| `STUDENT` | own scripts and PDFs; marks stay withheld until a challenge is upheld |
+
+**Students do not see marks by default.** A student can open any of their scripts and
+raise one challenge; if an admin upholds it, the per-examiner marks, the final mark and
+the grade are released on the portal. A dismissed challenge keeps them withheld.
 
 Blinding is enforced in the API, not the UI: the evaluator projection has no
 `student_name`/`student_no`, and PDF access is checked against the assignment table.
@@ -69,7 +72,7 @@ identities in `backend/cmd/seed/main.go`:
 
 | Account | Role |
 |---|---|
-| `registrar@uni.test` | HALL_MANAGER |
+| `registrar@uni.test` | ADMIN |
 | `examiner.one@uni.test` | EVALUATOR |
 | `adaeze@student.test` | STUDENT |
 

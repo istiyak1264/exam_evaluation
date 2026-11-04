@@ -26,7 +26,7 @@ export default function Catalog() {
       <div className="page-head">
         <div>
           <h1>Sessions, courses & students</h1>
-          <p>Master data. Scripts can only be registered against an existing course and student.</p>
+          <p>Master data. A script can only be registered against an existing course and student.</p>
         </div>
         <select value={sessionId} onChange={(e) => setSessionId(e.target.value)} style={{ padding: '.5rem', borderRadius: 8, border: '1px solid var(--line)' }}>
           <option value="">All sessions</option>

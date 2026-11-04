@@ -104,7 +104,7 @@ func (s *Store) EvaluatorQueue(ctx context.Context, evaluatorID, status string) 
 		}
 		m.Marks = []models.Mark{}
 		if marked {
-			mk, err := s.marksFor(ctx, m.ID)
+			mk, err := s.MarksForScript(ctx, m.ID)
 			if err != nil {
 				return nil, err
 			}
@@ -115,7 +115,8 @@ func (s *Store) EvaluatorQueue(ctx context.Context, evaluatorID, status string) 
 	return out, rows.Err()
 }
 
-func (s *Store) marksFor(ctx context.Context, scriptID string) ([]models.Mark, error) {
+// MarksForScript returns the marks of one script in slot order.
+func (s *Store) MarksForScript(ctx context.Context, scriptID string) ([]models.Mark, error) {
 	rows, err := s.DB.QueryContext(ctx, `
 		SELECT slot, score, comment, submitted_at FROM marks WHERE script_id = ?
 		ORDER BY CASE slot WHEN 'FIRST' THEN 1 WHEN 'SECOND' THEN 2 ELSE 3 END`, scriptID)

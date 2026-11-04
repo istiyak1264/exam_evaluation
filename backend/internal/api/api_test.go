@@ -361,6 +361,11 @@ func TestFullMarkingWorkflow(t *testing.T) {
 	if st != 200 || len(body["results"].([]any)) != 1 {
 		t.Fatalf("portal results: %d %v", st, body)
 	}
+	// Marks stay hidden until a challenge is upheld.
+	row0 := body["results"].([]any)[0].(map[string]any)
+	if row0["revealed"] != false || row0["final_marks"] != nil || row0["marks"] != nil {
+		t.Fatalf("marks leaked before any challenge: %v", row0)
+	}
 	st, body = h.do("POST", "/api/challenges", stu2Tok, map[string]any{"script_id": s2, "reason": "The second script was marked too harshly."})
 	if st != 201 {
 		t.Fatalf("challenge: %d %v", st, body)
@@ -371,6 +376,15 @@ func TestFullMarkingWorkflow(t *testing.T) {
 	}
 	if st, _ := h.do("PATCH", "/api/challenges/"+chID, adminTok, map[string]any{"status": "UPHELD", "note": "remarked"}); st != 200 {
 		t.Fatalf("decide: %d", st)
+	}
+	// Once upheld the student can see the marks and the final score.
+	st, body = h.do("GET", "/api/results/mine", stu2Tok, nil)
+	revealed := body["results"].([]any)[0].(map[string]any)
+	if revealed["revealed"] != true || revealed["final_marks"] == nil {
+		t.Fatalf("marks not revealed after uphold: %v", revealed)
+	}
+	if len(revealed["marks"].([]any)) != 3 {
+		t.Fatalf("expected the three examiner marks, got %v", revealed["marks"])
 	}
 
 	// --- admin override and audit trail

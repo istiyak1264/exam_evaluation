@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { api, when } from '../api'
 import { Empty, Loading, Note, useFetch } from '../components/ui'
 
-const ROLES = ['ADMIN', 'HALL_MANAGER', 'EVALUATOR', 'STUDENT']
+const ROLES = ['ADMIN', 'EVALUATOR', 'STUDENT']
 
 export default function Users() {
   const [role, setRole] = useState('')
@@ -32,7 +32,7 @@ export default function Users() {
       <div className="page-head">
         <div>
           <h1>People</h1>
-          <p>Accounts for the examination office, examiners and students. Deactivating keeps history intact.</p>
+          <p>Administrators, examiners and students. Deactivating keeps history intact.</p>
         </div>
         <select value={role} onChange={(e) => setRole(e.target.value)} style={{ padding: '.5rem', borderRadius: 8, border: '1px solid var(--line)' }}>
           <option value="">All roles</option>

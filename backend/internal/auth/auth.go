@@ -19,7 +19,6 @@ type Role string
 
 const (
 	RoleAdmin       Role = "ADMIN"
-	RoleHallManager Role = "HALL_MANAGER"
 	RoleEvaluator   Role = "EVALUATOR"
 	RoleStudent     Role = "STUDENT"
 )

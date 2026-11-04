@@ -50,7 +50,7 @@ export default function Login() {
         </div>
         <button className="btn primary" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
         <p className="hint" style={{ marginTop: '1.2rem', marginBottom: 0 }}>
-          Students: use the account issued by the examination office. Examiners never see names on the scripts they mark.
+          Students: use the account issued by the examination office. Examiners only see the scripts assigned to them, without names.
         </p>
       </form>
       </div>

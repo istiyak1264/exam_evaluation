@@ -108,6 +108,7 @@ type ResultRow struct {
 	Passed       *bool      `json:"passed,omitempty"`
 	Marks        []Mark     `json:"marks,omitempty"`
 	Challenge    *string    `json:"challenge_status,omitempty"`
+	Revealed     bool       `json:"revealed"`
 	ResolvedAt   *time.Time `json:"resolved_at,omitempty"`
 	RegisteredAt time.Time  `json:"registered_at"`
 }

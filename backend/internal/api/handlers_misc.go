@@ -50,6 +50,16 @@ func (s *Server) handleCreateChallenge(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusForbidden, "not your script")
 		return
 	}
+	// Only a published (resolved) mark can be challenged.
+	sc, err := s.DB.ScriptByID(r.Context(), req.ScriptID)
+	if err != nil {
+		mapStoreErr(w, err)
+		return
+	}
+	if sc.Status != "RESOLVED" {
+		writeErr(w, http.StatusUnprocessableEntity, "this script has no published result to challenge yet")
+		return
+	}
 	ch, err := s.DB.CreateChallenge(r.Context(), req.ScriptID, st.ID, strings.TrimSpace(req.Reason))
 	if err != nil {
 		mapStoreErr(w, err)
@@ -113,7 +123,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleMeta(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"third_review_threshold": 13,
-		"roles":                  []auth.Role{auth.RoleAdmin, auth.RoleHallManager, auth.RoleEvaluator, auth.RoleStudent},
+		"roles":                  []auth.Role{auth.RoleAdmin, auth.RoleEvaluator, auth.RoleStudent},
 		"version":                "1.0.0",
 	})
 }
