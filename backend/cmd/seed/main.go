@@ -52,7 +52,6 @@ func main() {
 		log.Fatal("SEED_PASSWORD is required (set it in .env)")
 	}
 
-	
 	ids := map[string]string{}
 	for _, p := range people {
 		u, err := ensureUser(ctx, st, p, pw)
