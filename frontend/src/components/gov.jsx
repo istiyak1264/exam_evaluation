@@ -1,6 +1,3 @@
-// Structural components modelled on the GOV.UK Design System patterns
-// (breadcrumbs, captions, summary lists, task lists, error summaries).
-
 export function SkipLink() {
   return <a className="skip-link" href="#main">Skip to main content</a>
 }

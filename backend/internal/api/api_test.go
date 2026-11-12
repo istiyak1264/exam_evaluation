@@ -25,7 +25,6 @@ import (
 	"github.com/istiyak/secure-exam-eval/internal/store"
 )
 
-// harness is a running API over a real MySQL database.
 type harness struct {
 	t   *testing.T
 	srv *httptest.Server

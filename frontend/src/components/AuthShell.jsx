@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom'
 import { SkipLink } from './gov'
 
-// Official-document composition: the crest and board identity head a ruled
-// sheet, the form sits on paper with a double hairline border, and the crest
-// shows through as a watermark. One centred column at every width.
 export function AuthShell({ title, children }) {
   return (
     <div className="auth-page">

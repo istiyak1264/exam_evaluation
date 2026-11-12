@@ -1,5 +1,3 @@
-// Command seed fills a fresh database with a realistic demonstration cohort.
-// Safe to re-run: it keyed everything off fixed identifiers.
 package main
 
 import (
@@ -22,6 +20,13 @@ type person struct {
 	email, name, role string
 }
 
+var people = []person{
+	{email: "registrar@uni.test", name: "Registrar User", role: "REGISTRAR"},
+	{email: "examiner.one@uni.test", name: "Examiner One", role: "EXAMINER"},
+	{email: "examiner.two@uni.test", name: "Examiner Two", role: "EXAMINER"},
+	{email: "examiner.three@uni.test", name: "Examiner Three", role: "EXAMINER"},
+}
+
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -42,18 +47,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// The password is never baked in: it comes from SEED_PASSWORD.
 	pw := os.Getenv("SEED_PASSWORD")
 	if pw == "" {
 		log.Fatal("SEED_PASSWORD is required (set it in .env)")
 	}
 
-	people := []person{
-		{"registrar@uni.test", "Bilkis Rahman", "ADMIN"},
-		{"examiner.one@uni.test", "Dr. Tariq Hossain", "EVALUATOR"},
-		{"examiner.two@uni.test", "Dr. Priya Nair", "EVALUATOR"},
-		{"examiner.three@uni.test", "Prof. Samuel Okoro", "EVALUATOR"},
-	}
+	
 	ids := map[string]string{}
 	for _, p := range people {
 		u, err := ensureUser(ctx, st, p, pw)

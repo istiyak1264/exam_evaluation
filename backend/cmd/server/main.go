@@ -1,4 +1,3 @@
-// Command server runs the exam evaluation API.
 package main
 
 import (

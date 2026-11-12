@@ -1,4 +1,3 @@
-// Package api wires HTTP routes to the store.
 package api
 
 import (

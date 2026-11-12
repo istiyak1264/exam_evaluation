@@ -1,7 +1,5 @@
 import { useState } from 'react'
 
-// Password input with a show/hide control, so long passphrases can be checked
-// on a phone keyboard too.
 export default function PasswordField({ id, label, value, onChange, hint, hintId, autoComplete = 'current-password', minLength }) {
   const [show, setShow] = useState(false)
   return (
