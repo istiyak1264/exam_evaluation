@@ -53,6 +53,10 @@ users ──< refresh_tokens      audit_log (append-only)
 script per student per course; `UNIQUE(script_id, slot)` enforces one mark per examiner
 position.
 
+`course_catalog` is the seeded eight-semester syllabus (code, title, credit); a session's
+courses are picked from it, so a course always carries its credit. Deleting a session
+cascades through its courses, students and their scripts.
+
 ## Run it
 
 ```bash
@@ -94,6 +98,9 @@ PDF token scoping, the student portal, challenges, overrides and the audit trail
 
 ```
 POST   /api/auth/login | //refresh | //logout      GET /api/auth/me
+GET    /api/sessions           POST /api/sessions   PATCH|DELETE /api/sessions/:id
+GET    /api/course-catalog     GET|POST /api/courses
+GET    /api/students           POST /api/students   POST /api/students/:id/link-user | DELETE /api/students/:id
 GET    /api/scripts            POST /api/scripts (multipart: file, course_id, student_id)
 GET    /api/scripts/:id        POST /api/scripts/:id/assign | //assign-third | //override
 POST   /api/scripts/:id/marks  POST /api/scripts/:id/pdf-token   GET /api/scripts/:id/pdf?t=
@@ -153,3 +160,4 @@ backend/internal/grading policy + tests
 frontend/src/pages      role-specific screens (.jsx)
 infra/terraform         AWS infrastructure
 ```
+# exam_evaluation

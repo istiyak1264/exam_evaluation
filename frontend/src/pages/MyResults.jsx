@@ -7,7 +7,8 @@ import { Badge, Empty, Grade, Loading, Note, useFetch } from '../components/ui'
 export default function MyResults() {
   const { data, error, loading, reload } = useFetch(() => api.myResults(), [])
   const [open, setOpen] = useState(null)
-  const [reason, setReason] = useState('')
+  const [challenging, setChallenging] = useState(null)
+  const [reasons, setReasons] = useState({})
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState(null)
 
@@ -15,8 +16,9 @@ export default function MyResults() {
     setBusy(true)
     setMsg(null)
     try {
-      await api.createChallenge(scriptId, reason)
-      setReason('')
+      await api.createChallenge(scriptId, reasons[scriptId] ?? '')
+      setReasons({ ...reasons, [scriptId]: '' })
+      setChallenging(null)
       setMsg('Challenge submitted. The board will review the script and, if upheld, your marks are released here.')
       reload()
     } catch (e) {
@@ -41,11 +43,6 @@ export default function MyResults() {
       </div>
 
       {msg && <Note kind="info">{msg}</Note>}
-
-      <Note kind="info">
-        Scripts are marked twice, independently, and a third examiner is appointed where the marks differ by 13 or more.
-        Marks are withheld until you challenge the evaluation and the board upholds it — then the marks and the total appear below.
-      </Note>
 
       {data && data.results.length === 0 && <Empty>No scripts on record yet.</Empty>}
 
@@ -91,22 +88,42 @@ export default function MyResults() {
             <button className="btn sm secondary" onClick={() => setOpen(open === r.script_id ? null : r.script_id)}>
               {open === r.script_id ? 'Hide script' : 'View script'}
             </button>
+            {r.status === 'RESOLVED' && !r.challenge_status && (
+              <button
+                className={`btn sm ${challenging === r.script_id ? 'secondary' : 'accent'}`}
+                onClick={() => setChallenging(challenging === r.script_id ? null : r.script_id)}
+              >
+                {challenging === r.script_id ? 'Cancel challenge' : 'Challenge marks'}
+              </button>
+            )}
             {r.challenge_status && <Badge status={r.challenge_status} />}
           </div>
+
+          {challenging === r.script_id && (
+            <form
+              className="stack"
+              style={{ borderTop: '1px solid var(--line-soft)', paddingTop: '.8rem' }}
+              onSubmit={(e) => { e.preventDefault(); void challenge(r.script_id) }}
+            >
+              <div className="field" style={{ maxWidth: 'none' }}>
+                <label htmlFor={`why-${r.script_id}`}>Why are you challenging this evaluation?</label>
+                <span className="hint">At least 10 characters. It is sent to the examination board's challenge list for a decision.</span>
+                <textarea
+                  id={`why-${r.script_id}`}
+                  required
+                  minLength={10}
+                  rows={3}
+                  value={reasons[r.script_id] ?? ''}
+                  onChange={(e) => setReasons({ ...reasons, [r.script_id]: e.target.value })}
+                />
+              </div>
+              <button className="btn primary" disabled={busy || (reasons[r.script_id] ?? '').trim().length < 10}>Submit challenge</button>
+            </form>
+          )}
 
           {open === r.script_id && (
             <div className="stack">
               <PdfPanel scriptId={r.script_id} />
-              {!r.challenge_status && r.status === 'RESOLVED' && (
-                <form className="stack" onSubmit={(e) => { e.preventDefault(); void challenge(r.script_id) }}>
-                  <div className="field" style={{ maxWidth: 'none' }}>
-                    <label htmlFor={`why-${r.script_id}`}>Why are you challenging this evaluation?</label>
-                    <span className="hint">At least 10 characters. The board reads this before deciding.</span>
-                    <textarea id={`why-${r.script_id}`} required minLength={10} rows={3} value={reason} onChange={(e) => setReason(e.target.value)} />
-                  </div>
-                  <button className="btn primary" disabled={busy || reason.trim().length < 10}>Submit challenge</button>
-                </form>
-              )}
               {r.challenge_status && <p className="hint" style={{ margin: 0 }}>One challenge per script.</p>}
             </div>
           )}

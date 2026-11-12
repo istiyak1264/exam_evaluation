@@ -131,7 +131,7 @@ func (h *harness) user(role auth.Role) (string, string) {
 // fixtures builds a session, student, course and returns their ids.
 func (h *harness) fixtures(sessionToken string) (studentID, courseID string) {
 	h.t.Helper()
-	st, body := h.do("POST", "/api/sessions", sessionToken, map[string]any{"name": "2026/2027 " + h.sfx, "code": "T" + h.sfx})
+	st, body := h.do("POST", "/api/sessions", sessionToken, map[string]any{"name": "2026/2027 " + h.sfx})
 	if st != 201 {
 		h.t.Fatalf("session: %d %v", st, body)
 	}
@@ -143,8 +143,22 @@ func (h *harness) fixtures(sessionToken string) (studentID, courseID string) {
 	if st != 201 {
 		h.t.Fatalf("student: %d %v", stBody, b1)
 	}
+	// Courses come from the fixed curriculum, not free text.
+	catStatus, catBody := h.do("GET", "/api/course-catalog", sessionToken, nil)
+	if catStatus != 200 {
+		h.t.Fatalf("catalog: %d %v", catStatus, catBody)
+	}
+	var catalogID string
+	for _, entry := range catBody["courses"].([]any) {
+		if c := entry.(map[string]any); c["code"] == "CSE 3103" {
+			catalogID = c["id"].(string)
+		}
+	}
+	if catalogID == "" {
+		h.t.Fatal("CSE 3103 missing from the course catalogue")
+	}
 	crsBody, b2 := h.do("POST", "/api/courses", sessionToken, map[string]any{
-		"code": "CSC301" + h.sfx, "title": "Compilers", "session_id": ses})
+		"catalog_id": catalogID, "session_id": ses})
 	if crsBody != 201 {
 		h.t.Fatalf("course: %d %v", crsBody, b2)
 	}
@@ -559,6 +573,74 @@ func TestDeleteUser(t *testing.T) {
 	}
 	if st, _ := h.do("PATCH", "/api/users/"+marker, adminTok, map[string]any{"is_active": false}); st != 200 {
 		t.Fatalf("disable instead: %d", st)
+	}
+}
+
+func TestDeleteCourseAndStudent(t *testing.T) {
+	h := newHarness(t)
+	_, adminTok := h.user(auth.RoleAdmin)
+	student, course := h.fixtures(adminTok)
+
+	if st, body := h.uploadScript(adminTok, course, student, "DELC"+h.sfx); st != 201 {
+		t.Fatalf("upload: %d %v", st, body)
+	}
+
+	// Deleting a course takes its scripts with it and reports 404 once gone.
+	if st, body := h.do("DELETE", "/api/courses/"+course, adminTok, nil); st != 200 {
+		t.Fatalf("delete course: %d %v", st, body)
+	}
+	var n int
+	if err := h.db.QueryRowContext(context.Background(), `SELECT COUNT(*) FROM scripts WHERE course_id = ?`, course).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatalf("scripts still attached to the deleted course: %d", n)
+	}
+	if st, _ := h.do("DELETE", "/api/courses/"+course, adminTok, nil); st != 404 {
+		t.Fatalf("delete missing course: %d", st)
+	}
+
+	// Students delete the same way.
+	if st, body := h.do("DELETE", "/api/students/"+student, adminTok, nil); st != 200 {
+		t.Fatalf("delete student: %d %v", st, body)
+	}
+	_, body := h.do("GET", "/api/students", adminTok, nil)
+	if list := body["students"].([]any); len(list) != 0 {
+		t.Fatalf("student still listed: %v", list)
+	}
+	if st, _ := h.do("DELETE", "/api/students/"+student, adminTok, nil); st != 404 {
+		t.Fatalf("delete missing student: %d", st)
+	}
+}
+
+func TestClearAudit(t *testing.T) {
+	h := newHarness(t)
+	_, adminTok := h.user(auth.RoleAdmin)
+
+	// A state change leaves a trail entry.
+	if st, body := h.do("POST", "/api/sessions", adminTok, map[string]any{"name": "AUDIT " + h.sfx}); st != 201 {
+		t.Fatalf("session: %d %v", st, body)
+	}
+	_, before := h.do("GET", "/api/admin/audit", adminTok, nil)
+	if n := len(before["entries"].([]any)); n == 0 {
+		t.Fatal("expected some audit entries")
+	}
+	st, body := h.do("DELETE", "/api/admin/audit", adminTok, nil)
+	if st != 200 {
+		t.Fatalf("clear audit: %d %v", st, body)
+	}
+	if body["cleared"].(float64) == 0 {
+		t.Fatal("clear reported zero rows")
+	}
+
+	// Only the clear action itself remains.
+	_, after := h.do("GET", "/api/admin/audit", adminTok, nil)
+	entries := after["entries"].([]any)
+	if len(entries) != 1 {
+		t.Fatalf("expected the clear action to remain, got %d entries", len(entries))
+	}
+	if act := entries[0].(map[string]any)["action"]; act != "AUDIT_CLEARED" {
+		t.Fatalf("remaining entry is %v", act)
 	}
 }
 

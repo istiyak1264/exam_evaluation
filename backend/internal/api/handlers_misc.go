@@ -110,6 +110,16 @@ func (s *Server) handleAudit(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"entries": out})
 }
 
+func (s *Server) handleClearAudit(w http.ResponseWriter, r *http.Request) {
+	n, err := s.DB.ClearAudit(r.Context())
+	if err != nil {
+		mapStoreErr(w, err)
+		return
+	}
+	s.audit(r, "AUDIT_CLEARED", "audit", "", map[string]any{"entries": n})
+	writeJSON(w, http.StatusOK, map[string]any{"cleared": n})
+}
+
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	dbOK := s.DB.DB.PingContext(r.Context()) == nil
 	status := http.StatusOK

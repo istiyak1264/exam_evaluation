@@ -31,7 +31,7 @@ test-api: ## Full API suite against a throwaway Postgres
 	@docker rm -f examtest-db >/dev/null 2>&1 || true
 	docker run -d --name examtest-db -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=exam_eval_test \
 		-e MYSQL_USER=exam -e MYSQL_PASSWORD=examtest -p 53307:3306 mysql:8.4 >/dev/null
-	@for i in $$(seq 1 40); do docker exec examtest-db mysqladmin ping -h127.0.0.1 -uroot -proot >/dev/null 2>&1 && break; sleep 2; done
+	@for i in $$(seq 1 40); do docker exec examtest-db mysqladmin ping -h127.0.0.1 -uroot -p root >/dev/null 2>&1 && break; sleep 2; done
 	cd backend && TEST_DATABASE_URL='$(DB_URL)' go test ./... ; status=$$?; \
 	docker rm -f examtest-db >/dev/null; exit $$status
 

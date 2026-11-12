@@ -96,7 +96,7 @@ func main() {
 			continue
 		}
 
-		pdf := buildPDF(r.name, code, "CSC301 — Compilers")
+		pdf := buildPDF(r.name, code, "CSE 3103 — Compiler Design")
 		key := "scripts/csc301/" + code + ".pdf"
 		if err := files.Put(ctx, key, bytes.NewReader(pdf), int64(len(pdf)), "application/pdf"); err != nil {
 			log.Fatal(err)
@@ -129,7 +129,6 @@ func main() {
 		}
 		_ = su
 	}
-
 	_ = api.NewLimiter
 	fmt.Println("seed complete — sign in with any of these, password = SEED_PASSWORD:")
 	fmt.Println("  registrar@uni.test")
@@ -160,7 +159,7 @@ func ensureSession(ctx context.Context, st *store.Store) (string, error) {
 	if err == nil {
 		return id, nil
 	}
-	s, err := st.CreateSession(ctx, "2026/2027", "A26")
+	s, err := st.CreateSession(ctx, "2026/2027")
 	if err != nil {
 		return "", err
 	}
@@ -169,11 +168,15 @@ func ensureSession(ctx context.Context, st *store.Store) (string, error) {
 
 func ensureCourse(ctx context.Context, st *store.Store, ses, instructor string) (string, error) {
 	var id string
-	err := st.DB.QueryRowContext(ctx, `SELECT id FROM courses WHERE code = 'CSC301' AND session_id = ?`, ses).Scan(&id)
+	err := st.DB.QueryRowContext(ctx, `SELECT id FROM courses WHERE code = 'CSE 3103' AND session_id = ?`, ses).Scan(&id)
 	if err == nil {
 		return id, nil
 	}
-	c, err := st.CreateCourse(ctx, "CSC301", "Compilers", ses, 100, 40, &instructor)
+	var catalogID string
+	if err := st.DB.QueryRowContext(ctx, `SELECT id FROM course_catalog WHERE code = 'CSE 3103'`).Scan(&catalogID); err != nil {
+		return "", err
+	}
+	c, err := st.CreateCourse(ctx, catalogID, ses, &instructor)
 	if err != nil {
 		return "", err
 	}
@@ -185,22 +188,28 @@ func ensureStudent(ctx context.Context, st *store.Store, no, reg, name, email, s
 	if len(rows) > 0 {
 		return rows[0].ID, "", nil
 	}
-	hash, err := auth.HashPassword(pw)
-	if err != nil {
-		return "", "", err
-	}
-	u, err := st.CreateUser(ctx, email, hash, name, "STUDENT")
-	if err != nil {
-		return "", "", err
+	var uid string
+	if u, err := st.UserByEmail(ctx, email); err == nil {
+		uid = u.ID
+	} else {
+		hash, herr := auth.HashPassword(pw)
+		if herr != nil {
+			return "", "", herr
+		}
+		u, cerr := st.CreateUser(ctx, email, hash, name, "STUDENT")
+		if cerr != nil {
+			return "", "", cerr
+		}
+		uid = u.ID
 	}
 	s, err := st.CreateStudent(ctx, no, reg, name, &email, ses)
 	if err != nil {
 		return "", "", err
 	}
-	if err := st.LinkStudentUser(ctx, s.ID, u.ID); err != nil {
+	if err := st.LinkStudentUser(ctx, s.ID, uid); err != nil {
 		return "", "", err
 	}
-	return s.ID, u.ID, nil
+	return s.ID, uid, nil
 }
 
 // buildPDF writes a small but structurally valid single-page PDF.

@@ -99,16 +99,20 @@ export const api = {
     request('POST', '/api/auth/password', { current_password, new_password }),
 
   sessions: () => request('GET', '/api/sessions'),
-  createSession: (name, code) => request('POST', '/api/sessions', { name, code }),
+  createSession: (name) => request('POST', '/api/sessions', { name }),
   setSessionActive: (id, is_active) => request('PATCH', `/api/sessions/${id}`, { is_active }),
+  deleteSession: (id) => request('DELETE', `/api/sessions/${id}`),
 
   students: (q = '', session_id = '') =>
     request('GET', `/api/students?${query({ q, session_id })}`),
   createStudent: (student) => request('POST', '/api/students', student),
   linkStudentUser: (id, user_id) => request('POST', `/api/students/${id}/link-user`, { user_id }),
+  deleteStudent: (id) => request('DELETE', `/api/students/${id}`),
 
+  courseCatalog: () => request('GET', '/api/course-catalog'),
   courses: (session_id = '') => request('GET', `/api/courses?${query({ session_id })}`),
   createCourse: (course) => request('POST', '/api/courses', course),
+  deleteCourse: (id) => request('DELETE', `/api/courses/${id}`),
 
   users: (role = '', q = '') => request('GET', `/api/users?${query({ role, q })}`),
   createUser: (user) => request('POST', '/api/users', user),
@@ -135,6 +139,7 @@ export const api = {
 
   stats: () => request('GET', '/api/admin/stats'),
   audit: (entity = '', entity_id = '') => request('GET', `/api/admin/audit?${query({ entity, entity_id })}`),
+  clearAudit: () => request('DELETE', '/api/admin/audit'),
 }
 
 export function money(n) {
@@ -144,4 +149,21 @@ export function money(n) {
 export function when(iso) {
   if (!iso) return '—'
   return new Date(iso).toLocaleString()
+}
+
+// Bangladesh Standard Time (UTC+6), used wherever records are shown to staff.
+const bst = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Asia/Dhaka',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+})
+
+export function whenBST(iso) {
+  if (!iso) return '—'
+  return `${bst.format(new Date(iso))} BST`
 }

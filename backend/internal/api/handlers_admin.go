@@ -24,7 +24,6 @@ func (s *Server) handleListSessions(w http.ResponseWriter, r *http.Request) {
 
 type sessionReq struct {
 	Name string `json:"name"`
-	Code string `json:"code"`
 }
 
 func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
@@ -32,18 +31,28 @@ func (s *Server) handleCreateSession(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &req) {
 		return
 	}
-	req.Name, req.Code = strings.TrimSpace(req.Name), strings.ToUpper(strings.TrimSpace(req.Code))
-	if req.Name == "" || req.Code == "" {
-		writeErr(w, http.StatusUnprocessableEntity, "name and code are required")
+	req.Name = strings.TrimSpace(req.Name)
+	if req.Name == "" {
+		writeErr(w, http.StatusUnprocessableEntity, "name is required")
 		return
 	}
-	m, err := s.DB.CreateSession(r.Context(), req.Name, req.Code)
+	m, err := s.DB.CreateSession(r.Context(), req.Name)
 	if err != nil {
 		mapStoreErr(w, err)
 		return
 	}
 	s.audit(r, "SESSION_CREATED", "session", m.ID, map[string]any{"name": m.Name})
 	writeJSON(w, http.StatusCreated, m)
+}
+
+func (s *Server) handleDeleteSession(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if err := s.DB.DeleteSession(r.Context(), id); err != nil {
+		mapStoreErr(w, err)
+		return
+	}
+	s.audit(r, "SESSION_DELETED", "session", id, nil)
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
 type activeReq struct {
@@ -125,6 +134,27 @@ func (s *Server) handleLinkStudentUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
+func (s *Server) handleDeleteStudent(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if err := s.DB.DeleteStudent(r.Context(), id); err != nil {
+		mapStoreErr(w, err)
+		return
+	}
+	s.audit(r, "STUDENT_DELETED", "student", id, nil)
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+// ---------- course catalogue ----------
+
+func (s *Server) handleListCourseCatalog(w http.ResponseWriter, r *http.Request) {
+	out, err := s.DB.ListCourseCatalog(r.Context())
+	if err != nil {
+		mapStoreErr(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"courses": out})
+}
+
 // ---------- courses ----------
 
 func (s *Server) handleListCourses(w http.ResponseWriter, r *http.Request) {
@@ -137,12 +167,9 @@ func (s *Server) handleListCourses(w http.ResponseWriter, r *http.Request) {
 }
 
 type courseReq struct {
-	Code         string   `json:"code"`
-	Title        string   `json:"title"`
-	SessionID    string   `json:"session_id"`
-	MaxMarks     *float64 `json:"max_marks"`
-	PassMarks    *float64 `json:"pass_marks"`
-	InstructorID string   `json:"instructor_id"`
+	CatalogID    string `json:"catalog_id"`
+	SessionID    string `json:"session_id"`
+	InstructorID string `json:"instructor_id"`
 }
 
 func (s *Server) handleCreateCourse(w http.ResponseWriter, r *http.Request) {
@@ -150,33 +177,31 @@ func (s *Server) handleCreateCourse(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &req) {
 		return
 	}
-	if req.Code == "" || req.Title == "" || req.SessionID == "" {
-		writeErr(w, http.StatusUnprocessableEntity, "code, title and session_id are required")
-		return
-	}
-	max, pass := 100.0, 40.0
-	if req.MaxMarks != nil {
-		max = *req.MaxMarks
-	}
-	if req.PassMarks != nil {
-		pass = *req.PassMarks
-	}
-	if max <= 0 || pass < 0 || pass > max {
-		writeErr(w, http.StatusUnprocessableEntity, "max_marks/pass_marks out of range")
+	if req.CatalogID == "" || req.SessionID == "" {
+		writeErr(w, http.StatusUnprocessableEntity, "catalog_id and session_id are required")
 		return
 	}
 	var instr *string
 	if req.InstructorID != "" {
 		instr = &req.InstructorID
 	}
-	m, err := s.DB.CreateCourse(r.Context(), strings.ToUpper(strings.TrimSpace(req.Code)), strings.TrimSpace(req.Title),
-		req.SessionID, max, pass, instr)
+	m, err := s.DB.CreateCourse(r.Context(), req.CatalogID, req.SessionID, instr)
 	if err != nil {
 		mapStoreErr(w, err)
 		return
 	}
 	s.audit(r, "COURSE_CREATED", "course", m.ID, map[string]any{"code": m.Code})
 	writeJSON(w, http.StatusCreated, m)
+}
+
+func (s *Server) handleDeleteCourse(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if err := s.DB.DeleteCourse(r.Context(), id); err != nil {
+		mapStoreErr(w, err)
+		return
+	}
+	s.audit(r, "COURSE_DELETED", "course", id, nil)
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
 // ---------- users ----------

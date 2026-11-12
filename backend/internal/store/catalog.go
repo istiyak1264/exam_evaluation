@@ -11,19 +11,19 @@ import (
 
 // ---------- sessions ----------
 
-func (s *Store) CreateSession(ctx context.Context, name, code string) (*models.Session, error) {
+func (s *Store) CreateSession(ctx context.Context, name string) (*models.Session, error) {
 	id := newID()
-	if _, err := s.DB.ExecContext(ctx, `INSERT INTO academic_sessions (id, name, code) VALUES (?,?,?)`, id, name, code); err != nil {
+	if _, err := s.DB.ExecContext(ctx, `INSERT INTO academic_sessions (id, name) VALUES (?,?)`, id, name); err != nil {
 		return nil, mapErr(err)
 	}
 	var m models.Session
-	err := s.DB.QueryRowContext(ctx, `SELECT id, name, code, is_active, created_at FROM academic_sessions WHERE id = ?`, id).
-		Scan(&m.ID, &m.Name, &m.Code, &m.IsActive, &m.CreatedAt)
+	err := s.DB.QueryRowContext(ctx, `SELECT id, name, is_active, created_at FROM academic_sessions WHERE id = ?`, id).
+		Scan(&m.ID, &m.Name, &m.IsActive, &m.CreatedAt)
 	return &m, mapErr(err)
 }
 
 func (s *Store) ListSessions(ctx context.Context) ([]models.Session, error) {
-	rows, err := s.DB.QueryContext(ctx, `SELECT id, name, code, is_active, created_at FROM academic_sessions ORDER BY name DESC`)
+	rows, err := s.DB.QueryContext(ctx, `SELECT id, name, is_active, created_at FROM academic_sessions ORDER BY name DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -31,12 +31,24 @@ func (s *Store) ListSessions(ctx context.Context) ([]models.Session, error) {
 	out := []models.Session{}
 	for rows.Next() {
 		var m models.Session
-		if err := rows.Scan(&m.ID, &m.Name, &m.Code, &m.IsActive, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.Name, &m.IsActive, &m.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, m)
 	}
 	return out, rows.Err()
+}
+
+// DeleteSession removes a session with its courses, students and their scripts.
+func (s *Store) DeleteSession(ctx context.Context, id string) error {
+	res, err := s.DB.ExecContext(ctx, `DELETE FROM academic_sessions WHERE id = ?`, id)
+	if err != nil {
+		return mapErr(err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func (s *Store) SetSessionActive(ctx context.Context, id string, active bool) error {
@@ -54,6 +66,60 @@ func (s *Store) SetSessionActive(ctx context.Context, id string, active bool) er
 		}
 	}
 	return nil
+}
+
+// ---------- course catalogue ----------
+
+// termName renders a study term such as "2nd Year 1st Semester".
+func termName(year, semester int) string {
+	ord := func(n int) string {
+		switch n {
+		case 1:
+			return "1st"
+		case 2:
+			return "2nd"
+		case 3:
+			return "3rd"
+		}
+		return "4th"
+	}
+	return ord(year) + " Year " + ord(semester) + " Semester"
+}
+
+// ListCourseCatalog returns the fixed curriculum in study order.
+func (s *Store) ListCourseCatalog(ctx context.Context) ([]models.CatalogCourse, error) {
+	rows, err := s.DB.QueryContext(ctx, `
+		SELECT id, code, title, credit, year_no, semester_no, category
+		FROM course_catalog ORDER BY year_no, semester_no, sort_order`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []models.CatalogCourse{}
+	for rows.Next() {
+		var m models.CatalogCourse
+		var year, semester int
+		if err := rows.Scan(&m.ID, &m.Code, &m.Title, &m.Credit, &year, &semester, &m.Category); err != nil {
+			return nil, err
+		}
+		m.Term = termName(year, semester)
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+func (s *Store) CatalogCourseByID(ctx context.Context, id string) (*models.CatalogCourse, error) {
+	var m models.CatalogCourse
+	var year, semester int
+	err := s.DB.QueryRowContext(ctx, `
+		SELECT id, code, title, credit, year_no, semester_no, category
+		FROM course_catalog WHERE id = ?`, id).
+		Scan(&m.ID, &m.Code, &m.Title, &m.Credit, &year, &semester, &m.Category)
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	m.Term = termName(year, semester)
+	return &m, nil
 }
 
 // ---------- students ----------
@@ -125,13 +191,31 @@ func (s *Store) LinkStudentUser(ctx context.Context, studentID, userID string) e
 	return err
 }
 
+// DeleteStudent removes a student record; the portal account is left alone and
+// their scripts go with them.
+func (s *Store) DeleteStudent(ctx context.Context, id string) error {
+	res, err := s.DB.ExecContext(ctx, `DELETE FROM students WHERE id = ?`, id)
+	if err != nil {
+		return mapErr(err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // ---------- courses ----------
 
-func (s *Store) CreateCourse(ctx context.Context, code, title, sessionID string, maxMarks, passMarks float64, instructor *string) (*models.Course, error) {
+// CreateCourse copies a catalogue entry into a session. Marks stay out of 100.
+func (s *Store) CreateCourse(ctx context.Context, catalogID, sessionID string, instructor *string) (*models.Course, error) {
+	cat, err := s.CatalogCourseByID(ctx, catalogID)
+	if err != nil {
+		return nil, err
+	}
 	id := newID()
 	if _, err := s.DB.ExecContext(ctx, `
-		INSERT INTO courses (id, code, title, session_id, max_marks, pass_marks, instructor_id)
-		VALUES (?,?,?,?,?,?,?)`, id, code, title, sessionID, maxMarks, passMarks, instructor); err != nil {
+		INSERT INTO courses (id, code, title, credit, catalog_id, session_id, max_marks, pass_marks, instructor_id)
+		VALUES (?,?,?,?,?,?,100,40,?)`, id, cat.Code, cat.Title, cat.Credit, cat.ID, sessionID, instructor); err != nil {
 		return nil, mapErr(err)
 	}
 	return s.CourseByID(ctx, id)
@@ -139,7 +223,7 @@ func (s *Store) CreateCourse(ctx context.Context, code, title, sessionID string,
 
 func (s *Store) ListCourses(ctx context.Context, sessionID string) ([]models.Course, error) {
 	rows, err := s.DB.QueryContext(ctx, `
-		SELECT c.id, c.code, c.title, c.session_id, ses.name, c.max_marks, c.pass_marks,
+		SELECT c.id, c.code, c.title, c.credit, c.session_id, ses.name, c.max_marks, c.pass_marks,
 		       u.full_name, c.is_active, c.created_at,
 		       (SELECT COUNT(*) FROM scripts sc WHERE sc.course_id = c.id)
 		FROM courses c
@@ -154,7 +238,7 @@ func (s *Store) ListCourses(ctx context.Context, sessionID string) ([]models.Cou
 	out := []models.Course{}
 	for rows.Next() {
 		var m models.Course
-		if err := rows.Scan(&m.ID, &m.Code, &m.Title, &m.SessionID, &m.Session, &m.MaxMarks, &m.PassMarks,
+		if err := rows.Scan(&m.ID, &m.Code, &m.Title, &m.Credit, &m.SessionID, &m.Session, &m.MaxMarks, &m.PassMarks,
 			&m.Instructor, &m.IsActive, &m.CreatedAt, &m.ScriptCount); err != nil {
 			return nil, err
 		}
@@ -163,13 +247,25 @@ func (s *Store) ListCourses(ctx context.Context, sessionID string) ([]models.Cou
 	return out, rows.Err()
 }
 
+// DeleteCourse removes a course; its scripts (and their marks/results) go too.
+func (s *Store) DeleteCourse(ctx context.Context, id string) error {
+	res, err := s.DB.ExecContext(ctx, `DELETE FROM courses WHERE id = ?`, id)
+	if err != nil {
+		return mapErr(err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // CourseByID loads one course.
 func (s *Store) CourseByID(ctx context.Context, id string) (*models.Course, error) {
 	var m models.Course
 	err := s.DB.QueryRowContext(ctx, `
-		SELECT id, code, title, session_id, max_marks, pass_marks, is_active, created_at
+		SELECT id, code, title, credit, session_id, max_marks, pass_marks, is_active, created_at
 		FROM courses WHERE id = ?`, id).
-		Scan(&m.ID, &m.Code, &m.Title, &m.SessionID, &m.MaxMarks, &m.PassMarks, &m.IsActive, &m.CreatedAt)
+		Scan(&m.ID, &m.Code, &m.Title, &m.Credit, &m.SessionID, &m.MaxMarks, &m.PassMarks, &m.IsActive, &m.CreatedAt)
 	if err != nil {
 		return nil, mapErr(err)
 	}

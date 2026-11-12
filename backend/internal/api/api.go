@@ -53,13 +53,18 @@ func (s *Server) Routes() http.Handler {
 	mux.Handle("GET /api/sessions", s.authed(s.handleListSessions, auth.RoleAdmin))
 	mux.Handle("POST /api/sessions", s.authed(s.handleCreateSession, auth.RoleAdmin))
 	mux.Handle("PATCH /api/sessions/{id}", s.authed(s.handlePatchSession, auth.RoleAdmin))
+	mux.Handle("DELETE /api/sessions/{id}", s.authed(s.handleDeleteSession, auth.RoleAdmin))
+
+	mux.Handle("GET /api/course-catalog", s.authed(s.handleListCourseCatalog, auth.RoleAdmin, auth.RoleEvaluator))
 
 	mux.Handle("GET /api/students", s.authed(s.handleListStudents, auth.RoleAdmin))
 	mux.Handle("POST /api/students", s.authed(s.handleCreateStudent, auth.RoleAdmin))
 	mux.Handle("POST /api/students/{id}/link-user", s.authed(s.handleLinkStudentUser, auth.RoleAdmin))
+	mux.Handle("DELETE /api/students/{id}", s.authed(s.handleDeleteStudent, auth.RoleAdmin))
 
 	mux.Handle("GET /api/courses", s.authed(s.handleListCourses, auth.RoleAdmin, auth.RoleEvaluator))
 	mux.Handle("POST /api/courses", s.authed(s.handleCreateCourse, auth.RoleAdmin))
+	mux.Handle("DELETE /api/courses/{id}", s.authed(s.handleDeleteCourse, auth.RoleAdmin))
 
 	mux.Handle("GET /api/users", s.authed(s.handleListUsers, auth.RoleAdmin))
 	mux.Handle("POST /api/users", s.authed(s.handleCreateUser, auth.RoleAdmin))
@@ -91,6 +96,7 @@ func (s *Server) Routes() http.Handler {
 
 	mux.Handle("GET /api/admin/stats", s.authed(s.handleStats, auth.RoleAdmin))
 	mux.Handle("GET /api/admin/audit", s.authed(s.handleAudit, auth.RoleAdmin))
+	mux.Handle("DELETE /api/admin/audit", s.authed(s.handleClearAudit, auth.RoleAdmin))
 	mux.Handle("GET /api/export/results.csv", s.authed(s.handleExportCSV, auth.RoleAdmin))
 
 	return s.chain(mux)

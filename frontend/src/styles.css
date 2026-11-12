@@ -507,3 +507,46 @@ tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
 @media (max-width: 720px) {
   .field-row { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* Curriculum picker: term groups, optional slots collapsed behind an arrow. */
+.picker { position: relative; flex: 1 1 22rem; min-width: 16rem; }
+.picker-trigger {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  text-align: left; padding: .5rem .7rem; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--paper); color: var(--ink); font: inherit; cursor: pointer;
+}
+.picker-trigger:hover, .picker-trigger:focus-visible { border-color: var(--green); }
+.picker-placeholder { color: var(--ink-soft); }
+.picker-panel {
+  position: absolute; z-index: 40; top: calc(100% + 4px); left: 0; right: 0; min-width: 26rem;
+  max-height: 24rem; overflow: auto; background: var(--paper);
+  border: 1px solid var(--line); border-top: 3px solid var(--green);
+  box-shadow: 0 10px 24px rgba(19, 31, 26, .16);
+}
+.picker-term + .picker-term { border-top: 1px solid var(--line-soft); }
+.picker-term-head {
+  position: sticky; top: 0; z-index: 1; background: var(--green-soft); color: var(--green-dark);
+  font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; padding: .4rem .7rem;
+}
+.picker-opt {
+  display: flex; gap: .4rem; align-items: baseline; width: 100%; text-align: left;
+  padding: .45rem .8rem; background: none; border: 0; font: inherit; font-size: .9rem;
+  color: var(--ink); cursor: pointer;
+}
+.picker-opt:hover, .picker-opt.is-on { background: var(--green-soft); }
+.picker-credit { margin-left: auto; color: var(--ink-soft); font-family: var(--mono); font-size: .78rem; }
+.picker-toggle {
+  display: flex; align-items: center; gap: .5rem; width: 100%; padding: .5rem .8rem;
+  background: var(--gold-soft); border: 0; border-top: 1px dashed var(--line);
+  font: inherit; font-size: .82rem; font-weight: 700; letter-spacing: .05em; color: var(--ink); cursor: pointer;
+}
+.picker-toggle:hover { background: #f2e6c8; }
+.picker-count { font-weight: 400; color: var(--ink-soft); }
+.picker-arrow { margin-left: auto; color: var(--ink-soft); transition: transform .15s; }
+.picker-arrow.up { transform: rotate(180deg); }
+.picker-nest { background: #fffdf6; }
+.picker-nest .picker-opt { padding-left: 1.8rem; font-size: .86rem; }
+
+@media (max-width: 620px) {
+  .picker-panel { min-width: 0; }
+}

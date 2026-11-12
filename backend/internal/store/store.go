@@ -245,6 +245,16 @@ func (s *Store) Audit(ctx context.Context, actorID, actorRole, action, entity, e
 	_, _ = s.DB.ExecContext(ctx, `INSERT INTO audit_log (`+cols+`) VALUES (`+vals+`)`, args...)
 }
 
+// ClearAudit empties the trail and reports how many rows were removed.
+func (s *Store) ClearAudit(ctx context.Context) (int64, error) {
+	res, err := s.DB.ExecContext(ctx, `DELETE FROM audit_log`)
+	if err != nil {
+		return 0, err
+	}
+	n, _ := res.RowsAffected()
+	return n, nil
+}
+
 func (s *Store) ListAudit(ctx context.Context, entity, entityID string, limit int) ([]models.AuditEntry, error) {
 	if limit <= 0 || limit > 500 {
 		limit = 200

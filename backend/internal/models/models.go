@@ -15,9 +15,18 @@ type User struct {
 type Session struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
-	Code      string    `json:"code"`
 	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// CatalogCourse is one entry of the fixed university curriculum.
+type CatalogCourse struct {
+	ID       string  `json:"id"`
+	Code     string  `json:"code"`
+	Title    string  `json:"title"`
+	Credit   float64 `json:"credit"`
+	Term     string  `json:"term"`
+	Category string  `json:"category"`
 }
 
 type Student struct {
@@ -36,6 +45,7 @@ type Course struct {
 	ID          string    `json:"id"`
 	Code        string    `json:"code"`
 	Title       string    `json:"title"`
+	Credit      float64   `json:"credit"`
 	SessionID   string    `json:"session_id"`
 	Session     string    `json:"session,omitempty"`
 	MaxMarks    float64   `json:"max_marks"`

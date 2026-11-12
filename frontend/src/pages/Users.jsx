@@ -93,7 +93,7 @@ export default function Users() {
                   <td className="hint">{when(u.created_at)}</td>
                   <td className="row" style={{ gap: '.4rem', flexWrap: 'nowrap' }}>
                     <button className="btn sm" onClick={() => void toggle(u.id, !u.is_active)}>{u.is_active ? 'Disable' : 'Enable'}</button>
-                    <button className="btn sm" onClick={() => void remove(u)}>Delete</button>
+                    <button className="btn sm danger" onClick={() => void remove(u)}>Delete</button>
                   </td>
                 </tr>
               ))}

@@ -348,6 +348,10 @@ func (s *Store) SubmitMark(ctx context.Context, scriptID, evaluatorID string, sc
 		}
 		scores = append(scores, sc)
 	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return grading.Decision{}, err
+	}
 	rows.Close()
 
 	decision, err := grading.Evaluate(scores, maxMarks)
