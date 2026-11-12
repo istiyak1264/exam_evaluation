@@ -311,8 +311,8 @@ resource "aws_secretsmanager_secret" "app" {
 resource "aws_secretsmanager_secret_version" "app" {
   secret_id = aws_secretsmanager_secret.app.id
   secret_string = jsonencode({
-    JWT_SECRET              = random_password.jwt.result
-    BOOTSTRAP_ADMIN_EMAIL   = "registrar@${var.project}.example"
+    JWT_SECRET               = random_password.jwt.result
+    BOOTSTRAP_ADMIN_EMAIL    = "registrar@${var.project}.example"
     BOOTSTRAP_ADMIN_PASSWORD = "ChangeMe#${random_password.jwt.result}"
   })
 }
@@ -518,7 +518,7 @@ resource "aws_iam_policy" "read_app_secret" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
+      Effect = "Allow"
       Action = ["secretsmanager:GetSecretValue"]
       Resource = [
         aws_secretsmanager_secret.app.arn,
@@ -543,9 +543,9 @@ resource "aws_ecs_task_definition" "backend" {
   task_role_arn            = aws_iam_role.task.arn
 
   container_definitions = jsonencode([{
-    name      = "backend"
-    image     = "${aws_ecr_repository.backend.repository_url}:${var.image_tag}"
-    essential = true
+    name         = "backend"
+    image        = "${aws_ecr_repository.backend.repository_url}:${var.image_tag}"
+    essential    = true
     portMappings = [{ containerPort = 8080, protocol = "tcp" }]
     environment = [
       { name = "APP_ENV", value = "production" },
@@ -592,9 +592,9 @@ resource "aws_ecs_task_definition" "web" {
   execution_role_arn       = aws_iam_role.exec.arn
 
   container_definitions = jsonencode([{
-    name      = "web"
-    image     = "${aws_ecr_repository.web.repository_url}:${var.image_tag}"
-    essential = true
+    name         = "web"
+    image        = "${aws_ecr_repository.web.repository_url}:${var.image_tag}"
+    essential    = true
     portMappings = [{ containerPort = 8080, protocol = "tcp" }]
     logConfiguration = {
       logDriver = "awslogs"

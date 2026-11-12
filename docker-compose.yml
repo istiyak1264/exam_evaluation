@@ -1,9 +1,5 @@
 name: secure-exam-eval
 
-# Every credential comes from .env — nothing is baked into this file.
-# Copy .env.example to .env and fill it in; `:?` makes compose fail loudly
-# rather than silently starting with a guessable password.
-
 services:
   db:
     image: mysql:8.4
@@ -51,7 +47,8 @@ services:
   web:
     build: ./frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "${WEB_PORT:-8090}:8080"
     restart: unless-stopped

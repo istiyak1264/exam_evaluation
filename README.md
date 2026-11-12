@@ -82,6 +82,15 @@ identities in `backend/cmd/seed/main.go`:
 
 Change `BOOTSTRAP_ADMIN_PASSWORD` (and `SEED_PASSWORD`) before any real use.
 
+### If it will not start
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Backend restart-loops with `Error 1045 ... Access denied for user 'exam'` | the `mysqldata` volume was initialised with different credentials than the ones now in `.env` — MySQL only applies `MYSQL_PASSWORD` on first init | `make db-reset` (drops the database) or change the users in place: `docker compose exec db mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "ALTER USER 'exam'@'%' IDENTIFIED BY '$MYSQL_PASSWORD'; ALTER USER 'root'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD'"` |
+| Web restart-loops with `host not found in upstream "backend"` | nginx resolves upstreams at start-up; it used to boot before the API existed | fixed in `docker-compose.yml` + `frontend/nginx.conf`: the `web` service waits for the backend healthcheck and re-resolves the API through Docker DNS |
+| `npm run dev` returns 502 on `/api/...` | the Vite proxy targets `localhost:8080`, where `make dev` runs the API | use `make dev`, or the compose stack on :8090 |
+| Changes to `frontend/nginx.conf` have no effect | the config is baked into the image | `docker compose up -d --build web` |
+
 ## Tests
 
 ```bash
@@ -160,4 +169,3 @@ backend/internal/grading policy + tests
 frontend/src/pages      role-specific screens (.jsx)
 infra/terraform         AWS infrastructure
 ```
-# exam_evaluation
