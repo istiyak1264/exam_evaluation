@@ -9,11 +9,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/istiyak/secure-exam-eval/internal/auth"
-	"github.com/istiyak/secure-exam-eval/internal/config"
-	"github.com/istiyak/secure-exam-eval/internal/models"
-	"github.com/istiyak/secure-exam-eval/internal/storage"
-	"github.com/istiyak/secure-exam-eval/internal/store"
+	"github.com/istiyak/exam-evaluation/internal/auth"
+	"github.com/istiyak/exam-evaluation/internal/config"
+	"github.com/istiyak/exam-evaluation/internal/models"
+	"github.com/istiyak/exam-evaluation/internal/storage"
+	"github.com/istiyak/exam-evaluation/internal/store"
 )
 
 // Server carries dependencies for all handlers.
@@ -42,7 +42,6 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("GET /api/meta", s.handleMeta)
 
 	mux.HandleFunc("POST /api/auth/login", s.handleLogin)
-	mux.HandleFunc("POST /api/auth/register", s.handleRegister)
 	mux.HandleFunc("POST /api/auth/refresh", s.handleRefresh)
 	mux.HandleFunc("POST /api/auth/logout", s.handleLogout)
 	mux.Handle("GET /api/auth/me", s.authed(s.handleMe, ""))

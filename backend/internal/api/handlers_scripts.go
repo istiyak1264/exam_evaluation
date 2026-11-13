@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/istiyak/secure-exam-eval/internal/auth"
-	"github.com/istiyak/secure-exam-eval/internal/grading"
-	"github.com/istiyak/secure-exam-eval/internal/store"
+	"github.com/istiyak/exam-evaluation/internal/auth"
+	"github.com/istiyak/exam-evaluation/internal/grading"
+	"github.com/istiyak/exam-evaluation/internal/store"
 )
 
 func (s *Server) handleListScripts(w http.ResponseWriter, r *http.Request) {

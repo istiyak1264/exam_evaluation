@@ -10,12 +10,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/istiyak/secure-exam-eval/internal/api"
-	"github.com/istiyak/secure-exam-eval/internal/auth"
-	"github.com/istiyak/secure-exam-eval/internal/config"
-	"github.com/istiyak/secure-exam-eval/internal/db"
-	"github.com/istiyak/secure-exam-eval/internal/storage"
-	"github.com/istiyak/secure-exam-eval/internal/store"
+	"github.com/istiyak/exam-evaluation/internal/api"
+	"github.com/istiyak/exam-evaluation/internal/auth"
+	"github.com/istiyak/exam-evaluation/internal/config"
+	"github.com/istiyak/exam-evaluation/internal/db"
+	"github.com/istiyak/exam-evaluation/internal/storage"
+	"github.com/istiyak/exam-evaluation/internal/store"
 )
 
 func main() {
@@ -98,10 +98,15 @@ func run() error {
 	}
 }
 
-// bootstrapAdmin seeds the first administrator once, from env.
+// bootstrapAdmin creates the single administrator from the environment
+// (BOOTSTRAP_ADMIN_EMAIL / BOOTSTRAP_ADMIN_PASSWORD / BOOTSTRAP_ADMIN_NAME)
+// when it does not exist yet. No identity or credential is compiled in.
 func bootstrapAdmin(ctx context.Context, st *store.Store, cfg *config.Config, log *slog.Logger) error {
-	if cfg.BootstrapEmail == "" || cfg.BootstrapPass == "" {
+	if cfg.BootstrapEmail == "" && cfg.BootstrapPass == "" {
 		return nil
+	}
+	if cfg.BootstrapEmail == "" || cfg.BootstrapPass == "" {
+		return errors.New("BOOTSTRAP_ADMIN_EMAIL and BOOTSTRAP_ADMIN_PASSWORD must both be set")
 	}
 	if _, err := st.UserByEmail(ctx, cfg.BootstrapEmail); err == nil {
 		return nil
@@ -112,7 +117,7 @@ func bootstrapAdmin(ctx context.Context, st *store.Store, cfg *config.Config, lo
 	if err != nil {
 		return err
 	}
-	u, err := st.CreateUser(ctx, cfg.BootstrapEmail, hash, "System Administrator", string(auth.RoleAdmin))
+	u, err := st.CreateUser(ctx, cfg.BootstrapEmail, hash, cfg.BootstrapName, string(auth.RoleAdmin))
 	if err != nil {
 		return err
 	}

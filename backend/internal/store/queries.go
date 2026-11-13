@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/istiyak/secure-exam-eval/internal/grading"
-	"github.com/istiyak/secure-exam-eval/internal/models"
+	"github.com/istiyak/exam-evaluation/internal/grading"
+	"github.com/istiyak/exam-evaluation/internal/models"
 )
 
 // SearchResults powers the retrieval screen: any of name, matriculation

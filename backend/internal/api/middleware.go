@@ -10,9 +10,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/istiyak/secure-exam-eval/internal/auth"
-	"github.com/istiyak/secure-exam-eval/internal/models"
-	"github.com/istiyak/secure-exam-eval/internal/store"
+	"github.com/istiyak/exam-evaluation/internal/auth"
+	"github.com/istiyak/exam-evaluation/internal/models"
+	"github.com/istiyak/exam-evaluation/internal/store"
 )
 
 // authed wraps a handler with authentication and optional role checks.

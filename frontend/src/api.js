@@ -93,7 +93,6 @@ const query = (params) =>
 export const api = {
   login: (email, password) => request('POST', '/api/auth/login', { email, password }),
   logout: () => request('POST', '/api/auth/logout', { refresh_token: tokens.refresh }),
-  register: (payload) => request('POST', '/api/auth/register', payload),
   me: () => request('GET', '/api/auth/me'),
   changePassword: (current_password, new_password) =>
     request('POST', '/api/auth/password', { current_password, new_password }),

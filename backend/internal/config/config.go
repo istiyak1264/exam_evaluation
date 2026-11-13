@@ -26,6 +26,7 @@ type Config struct {
 	CookieSecure    bool
 	BootstrapEmail  string
 	BootstrapPass   string
+	BootstrapName   string
 	TrustedProxyHdr bool
 }
 
@@ -54,6 +55,7 @@ func Load() (*Config, error) {
 		CookieSecure:   env("COOKIE_SECURE", "true") == "true",
 		BootstrapEmail: env("BOOTSTRAP_ADMIN_EMAIL", ""),
 		BootstrapPass:  env("BOOTSTRAP_ADMIN_PASSWORD", ""),
+		BootstrapName:  env("BOOTSTRAP_ADMIN_NAME", "Administrator"),
 	}
 	for _, o := range strings.Split(env("ALLOWED_ORIGINS", "http://localhost:5173"), ",") {
 		if o = strings.TrimSpace(o); o != "" {

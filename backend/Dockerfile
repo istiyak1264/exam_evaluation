@@ -7,8 +7,7 @@ RUN go mod download
 COPY . .
 ARG VERSION=1.0.0
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" \
-    -o /out/server ./cmd/server && \
-    CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags "-s -w" -o /out/seed ./cmd/seed
+    -o /out/server ./cmd/server
 
 FROM alpine:3.20
 RUN apk add --no-cache ca-certificates tzdata wget && \
@@ -16,7 +15,6 @@ RUN apk add --no-cache ca-certificates tzdata wget && \
     mkdir -p /data/scripts && chown -R app:app /data
 WORKDIR /app
 COPY --from=build /out/server /app/server
-COPY --from=build /out/seed /app/seed
 USER app
 EXPOSE 8080
 HEALTHCHECK --interval=20s --timeout=3s --start-period=20s --retries=3 \

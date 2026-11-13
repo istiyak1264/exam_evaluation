@@ -1,4 +1,4 @@
-module github.com/istiyak/secure-exam-eval
+module github.com/istiyak/exam-evaluation
 
 go 1.26.0
 

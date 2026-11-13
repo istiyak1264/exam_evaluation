@@ -12,7 +12,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 
-	"github.com/istiyak/secure-exam-eval/internal/models"
+	"github.com/istiyak/exam-evaluation/internal/models"
 )
 
 // Sentinel errors mapped to HTTP statuses by the API layer.

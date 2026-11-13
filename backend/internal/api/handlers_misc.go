@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/istiyak/secure-exam-eval/internal/auth"
+	"github.com/istiyak/exam-evaluation/internal/auth"
 )
 
 func trimZero(f float64) string {

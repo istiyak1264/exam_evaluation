@@ -15,7 +15,7 @@ terraform {
   # Recommended: keep state in S3 with locking (create the bucket first).
   # backend "s3" {
   #   bucket       = "my-tf-state"
-  #   key          = "secure-exam-eval/terraform.tfstate"
+  #   key          = "exam-evaluation/terraform.tfstate"
   #   region       = "eu-west-1"
   #   encrypt      = true
   #   use_lockfile = true

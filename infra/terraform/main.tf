@@ -302,6 +302,14 @@ resource "random_password" "jwt" {
   special = false
 }
 
+# The administrator is never written into the code: the email comes from
+# TF_VAR_admin_email (or -var), the password is generated here and both are
+# handed to the task through Secrets Manager as BOOTSTRAP_ADMIN_*.
+resource "random_password" "admin" {
+  length  = 24
+  special = true
+}
+
 resource "aws_secretsmanager_secret" "app" {
   name                    = "${var.project}/app"
   recovery_window_in_days = 7
@@ -312,8 +320,9 @@ resource "aws_secretsmanager_secret_version" "app" {
   secret_id = aws_secretsmanager_secret.app.id
   secret_string = jsonencode({
     JWT_SECRET               = random_password.jwt.result
-    BOOTSTRAP_ADMIN_EMAIL    = "registrar@${var.project}.example"
-    BOOTSTRAP_ADMIN_PASSWORD = "ChangeMe#${random_password.jwt.result}"
+    BOOTSTRAP_ADMIN_EMAIL    = var.admin_email
+    BOOTSTRAP_ADMIN_PASSWORD = random_password.admin.result
+    BOOTSTRAP_ADMIN_NAME     = var.admin_name
   })
 }
 
@@ -561,6 +570,7 @@ resource "aws_ecs_task_definition" "backend" {
       { name = "JWT_SECRET", valueFrom = "${aws_secretsmanager_secret.app.arn}:JWT_SECRET::" },
       { name = "BOOTSTRAP_ADMIN_EMAIL", valueFrom = "${aws_secretsmanager_secret.app.arn}:BOOTSTRAP_ADMIN_EMAIL::" },
       { name = "BOOTSTRAP_ADMIN_PASSWORD", valueFrom = "${aws_secretsmanager_secret.app.arn}:BOOTSTRAP_ADMIN_PASSWORD::" },
+      { name = "BOOTSTRAP_ADMIN_NAME", valueFrom = "${aws_secretsmanager_secret.app.arn}:BOOTSTRAP_ADMIN_NAME::" },
       { name = "DATABASE_URL", valueFrom = aws_secretsmanager_secret.db_url.arn },
     ]
     logConfiguration = {

@@ -49,7 +49,7 @@ type Manager struct {
 }
 
 func NewManager(secret []byte, accessTTL, refreshTTL time.Duration) *Manager {
-	return &Manager{secret: secret, accessTTL: accessTTL, refreshTTL: refreshTTL, issuer: "secure-exam-eval"}
+	return &Manager{secret: secret, accessTTL: accessTTL, refreshTTL: refreshTTL, issuer: "exam-evaluation"}
 }
 
 // HashPassword derives a bcrypt digest.

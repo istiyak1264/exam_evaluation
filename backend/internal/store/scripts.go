@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/istiyak/secure-exam-eval/internal/grading"
-	"github.com/istiyak/secure-exam-eval/internal/models"
+	"github.com/istiyak/exam-evaluation/internal/grading"
+	"github.com/istiyak/exam-evaluation/internal/models"
 )
 
 // maxCodeRetries guards the cover-sheet code generator.

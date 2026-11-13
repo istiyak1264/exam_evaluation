@@ -164,7 +164,7 @@ export default function Catalog() {
             e.preventDefault()
             void run(async () => { await api.createSession(sesName); setSesName('') }, 'Session created.')
           }}>
-            <input required placeholder="2026/2027" value={sesName} onChange={(e) => setSesName(e.target.value)} style={{ padding: '.5rem', border: '1px solid var(--line)', borderRadius: 8, flex: 1 }} />
+            <input required placeholder="2022-23" value={sesName} onChange={(e) => setSesName(e.target.value)} style={{ padding: '.5rem', border: '1px solid var(--line)', borderRadius: 8, flex: 1 }} />
             <button className="btn primary">Add session</button>
           </form>
           <table>

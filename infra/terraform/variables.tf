@@ -1,12 +1,23 @@
 variable "project" {
   description = "Short name used to prefix every resource."
   type        = string
-  default     = "secure-exam-eval"
+  default     = "exam-evaluation"
 }
 
 variable "region" {
   type    = string
   default = "eu-west-1"
+}
+
+variable "admin_email" {
+  description = "Login email for the bootstrap administrator (required; not stored in code)."
+  type        = string
+}
+
+variable "admin_name" {
+  description = "Display name for the bootstrap administrator."
+  type        = string
+  default     = "Administrator"
 }
 
 variable "vpc_cidr" {
@@ -92,7 +103,7 @@ variable "log_retention_days" {
 variable "tags" {
   type = map(string)
   default = {
-    Project   = "secure-exam-eval"
+    Project   = "exam-evaluation"
     Owner     = "examinations-office"
     ManagedBy = "terraform"
   }

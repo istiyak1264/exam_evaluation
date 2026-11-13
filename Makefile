@@ -3,7 +3,7 @@ SHELL := /bin/bash
 # Credentials live in .env only; the dev/test targets read them from here.
 -include .env
 export MYSQL_PASSWORD MYSQL_ROOT_PASSWORD JWT_SECRET BOOTSTRAP_ADMIN_EMAIL \
-	BOOTSTRAP_ADMIN_PASSWORD SEED_PASSWORD ALLOWED_ORIGINS APP_ENV \
+	BOOTSTRAP_ADMIN_PASSWORD BOOTSTRAP_ADMIN_NAME ALLOWED_ORIGINS APP_ENV \
 	WEB_PORT DB_PORT STORAGE_DRIVER
 
 DB_PORT ?= 53306
@@ -13,10 +13,10 @@ DB_URL ?= exam:$(MYSQL_PASSWORD)@tcp(127.0.0.1:$(DB_PORT))/exam_eval?parseTime=t
 TEST_DB_PORT ?= 53307
 TEST_DB_URL ?= exam:examtest@tcp(127.0.0.1:$(TEST_DB_PORT))/exam_eval_test?parseTime=true&multiStatements=true
 
-IMAGE ?= secure-exam-eval-backend
+IMAGE ?= exam-evaluation-backend
 TAG ?= dev
 
-.PHONY: help dev up down logs test test-unit test-api build seed fmt vet compose-test tf-plan tf-apply clean db-reset
+.PHONY: help dev up down logs test test-unit test-api build fmt vet compose-test tf-plan tf-apply clean db-reset
 
 help:
 	@grep -hE '^[a-z-]+:.*?##' $(MAKEFILE_LIST) | sed 's/:.*##/ — /'
@@ -29,9 +29,6 @@ down: ## Stop the stack
 
 logs: ## Tail backend logs
 	docker compose logs -f backend
-
-seed: ## Load demo cohort into the running stack
-	docker compose --profile seed run --rm seed
 
 dev: ## Run backend + vite locally against the compose db
 	@test -n "$(MYSQL_PASSWORD)" || { echo "MYSQL_PASSWORD is empty — copy .env.example to .env first"; exit 1; }
@@ -59,7 +56,7 @@ vet:
 
 build: ## Build production images
 	docker build -t $(IMAGE):$(TAG) ./backend
-	docker build -t secure-exam-eval-web:$(TAG) ./frontend
+	docker build -t exam-evaluation-web:$(TAG) ./frontend
 
 compose-test: ## Boot the stack, hit health, tear down
 	docker compose up -d --build

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/istiyak/secure-exam-eval/internal/models"
+	"github.com/istiyak/exam-evaluation/internal/models"
 )
 
 // ---------- sessions ----------
@@ -272,9 +272,9 @@ func (s *Store) CourseByID(ctx context.Context, id string) (*models.Course, erro
 	return &m, nil
 }
 
-// UnclaimedStudent matches a student ID against a registration number for
-// sign-up linking. Mismatched pairs and already-claimed records return
-// ErrNotFound.
+// UnclaimedStudent matches a student ID against a registration number when an
+// administrator creates a STUDENT account. Mismatched pairs and already-claimed
+// records return ErrNotFound.
 func (s *Store) UnclaimedStudent(ctx context.Context, studentNo, registrationNo string) (*models.Student, error) {
 	// Exact match first, then a suffixed match so an abbreviated number such as
 	// "0301" also finds "MAT/2026/0301".
